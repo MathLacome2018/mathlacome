@@ -1,0 +1,35 @@
+<!-- @dsCard group="Brand" viewport="700x120" name="Editorial Rules" subtitle="Border weight, dividers, and typographic rule usage" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body { padding: 24px; background: var(--bg-page); font-family: var(--font-body); }
+    .stack { display: flex; flex-direction: column; gap: 16px; }
+    .rule-row { display: flex; align-items: center; gap: 16px; }
+    .rule-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-tertiary); width: 100px; flex-shrink: 0; }
+    .rule-line { flex: 1; }
+  </style>
+</head>
+<body>
+<div class="stack">
+  <div class="rule-row">
+    <span class="rule-label">Article rule (2px)</span>
+    <div class="rule-line" style="border-top: 2px solid #000;"></div>
+  </div>
+  <div class="rule-row">
+    <span class="rule-label">Section rule (1px)</span>
+    <div class="rule-line" style="border-top: 1px solid #000;"></div>
+  </div>
+  <div class="rule-row">
+    <span class="rule-label">Divider (1px muted)</span>
+    <div class="rule-line" style="border-top: 1px solid var(--border-default);"></div>
+  </div>
+  <div class="rule-row">
+    <span class="rule-label">Ghost rule</span>
+    <div class="rule-line" style="border-top: 1px solid var(--bg-muted);"></div>
+  </div>
+</div>
+</body>
+</html>

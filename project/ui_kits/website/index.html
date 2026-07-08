@@ -1,0 +1,200 @@
+<!-- @startingPoint section="Website" subtitle="Mathlacome personal blog — home feed" viewport="1280x900" -->
+<!-- @dsCard group="Website" viewport="1280x900" name="Website — Home" subtitle="Editorial blog homepage with nav, hero, article feed and footer" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mathlacome</title>
+  <link rel="stylesheet" href="../../styles.css">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+    body { background: var(--bg-page); color: var(--fg-primary); }
+    a { color: inherit; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { Nav, ArticleCard, Badge, Button, Divider, PullQuote } = window.DesignSystem_6c4953;
+
+const ARTICLES = [
+  { id: 1, title: "The Geometry of Space-Time", category: "Science", date: "Jul 2026", readTime: "6 min read", excerpt: "How differential geometry and topology provide the mathematical scaffolding upon which our understanding of the physical universe rests.", featured: true },
+  { id: 2, title: "High Press Systems in Modern Football", category: "Analysis", date: "Jun 2026", readTime: "9 min read", excerpt: "A tactical breakdown of pressing triggers, cover shadows, and defensive compactness in elite football.", featured: false },
+  { id: 3, title: "On the Elegance of Mathematical Proof", category: "Mathematics", date: "Jun 2026", readTime: "5 min read", excerpt: "What separates a beautiful proof from a merely correct one? Exploring aesthetic criteria in formal mathematics.", featured: false },
+  { id: 4, title: "Expected Threat: A Spatial Model", category: "Data", date: "May 2026", readTime: "11 min read", excerpt: "Building an xT model from first principles using spatial probability distributions and Markov chains.", featured: false },
+  { id: 5, title: "Entropy and Information", category: "Science", date: "May 2026", readTime: "7 min read", excerpt: "Shannon's entropy formulation and its surprising connections to thermodynamics and statistical mechanics.", featured: false },
+];
+
+const NAV_LINKS = [
+  { label: 'Articles', href: '#' },
+  { label: 'Science', href: '#' },
+  { label: 'Football', href: '#' },
+  { label: 'About', href: '#' },
+];
+
+function Hero() {
+  const featured = ARTICLES[0];
+  return (
+    <section style={{ borderBottom: '1px solid var(--border-default)', padding: '48px 0 0' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'end', paddingBottom: 48 }}>
+          <div>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--fg-tertiary)', marginBottom: 16 }}>
+              {featured.category} · {featured.date} · {featured.readTime}
+            </div>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '5rem', lineHeight: 1, letterSpacing: '0.02em', marginBottom: 20 }}>
+              {featured.title}
+            </h1>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', fontWeight: 300, lineHeight: 1.65, color: 'var(--fg-secondary)', maxWidth: 480, marginBottom: 28 }}>
+              {featured.excerpt}
+            </p>
+            <Button variant="primary" size="md">Read Article</Button>
+          </div>
+          <div style={{ aspectRatio: '4/3', background: 'var(--bg-muted)', borderTop: '1px solid var(--border-default)' }}>
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-tertiary)', fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+              Featured image
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ArticleFeed() {
+  const [activeFilter, setActiveFilter] = React.useState('All');
+  const filters = ['All', 'Science', 'Football', 'Mathematics', 'Data'];
+
+  return (
+    <section style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px' }}>
+      {/* Filter row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 32, borderBottom: '1px solid var(--border-default)', paddingBottom: 16 }}>
+        {filters.map(f => (
+          <button key={f} onClick={() => setActiveFilter(f)} style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            color: activeFilter === f ? 'var(--fg-primary)' : 'var(--fg-tertiary)',
+            background: 'none',
+            border: 'none',
+            borderBottom: activeFilter === f ? '2px solid var(--fg-primary)' : '2px solid transparent',
+            padding: '4px 16px 14px',
+            cursor: 'pointer',
+            marginBottom: -17,
+          }}>{f}</button>
+        ))}
+      </div>
+
+      {/* Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0 40px' }}>
+        {ARTICLES.slice(1).filter(a => activeFilter === 'All' || a.category === activeFilter).map(article => (
+          <ArticleCard
+            key={article.id}
+            title={article.title}
+            category={article.category}
+            date={article.date}
+            readTime={article.readTime}
+            excerpt={article.excerpt}
+            layout="minimal"
+            href="#"
+            style={{ marginBottom: 32 }}
+          />
+        ))}
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: 16, paddingTop: 32, borderTop: '1px solid var(--border-default)' }}>
+        <Button variant="ghost" size="md">Load More Articles</Button>
+      </div>
+    </section>
+  );
+}
+
+function SubscribeBanner() {
+  const [email, setEmail] = React.useState('');
+  return (
+    <section style={{ background: 'var(--fg-primary)', color: 'var(--fg-invert)', padding: '64px 32px' }}>
+      <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 12 }}>Newsletter</div>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '3rem', letterSpacing: '0.02em', lineHeight: 1.05, marginBottom: 16, color: '#fff' }}>
+          Ideas Worth Thinking About
+        </h2>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 300, lineHeight: 1.65, color: 'rgba(255,255,255,0.6)', marginBottom: 32 }}>
+          Science, mathematics, and football analysis — delivered when it matters.
+        </p>
+        <div style={{ display: 'flex', gap: 0, maxWidth: 420, margin: '0 auto' }}>
+          <input
+            type="email"
+            placeholder="your@email.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            style={{
+              flex: 1,
+              fontFamily: 'var(--font-body)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 300,
+              padding: '12px 16px',
+              border: '1px solid rgba(255,255,255,0.25)',
+              background: 'transparent',
+              color: '#fff',
+              outline: 'none',
+              letterSpacing: '0.04em',
+            }}
+          />
+          <button style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            background: '#fff',
+            color: '#000',
+            border: 'none',
+            padding: '12px 24px',
+            cursor: 'pointer',
+          }}>Subscribe</button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer style={{ borderTop: '1px solid var(--border-default)', padding: '40px 32px' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', letterSpacing: '0.04em' }}>Mathlacome</span>
+        <div style={{ display: 'flex', gap: 32 }}>
+          {['Articles', 'Science', 'Football', 'About', 'Subscribe'].map(l => (
+            <a key={l} href="#" style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--fg-tertiary)' }}>{l}</a>
+          ))}
+        </div>
+        <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.1em', color: 'var(--fg-tertiary)' }}>© 2026 Mathlacome</span>
+      </div>
+    </footer>
+  );
+}
+
+function App() {
+  return (
+    <div>
+      <Nav brand="Mathlacome" links={NAV_LINKS} cta={{ label: 'Subscribe', href: '#' }} theme="light" sticky={true} />
+      <Hero />
+      <ArticleFeed />
+      <SubscribeBanner />
+      <Footer />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

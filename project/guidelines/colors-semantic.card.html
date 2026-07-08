@@ -1,0 +1,26 @@
+<!-- @dsCard group="Colors" viewport="700x140" name="Semantic Colors" subtitle="Foreground, background and border tokens" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body { padding: 20px; background: var(--bg-page); font-family: var(--font-body); }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 24px; }
+    .token { display: flex; align-items: center; gap: 10px; }
+    .dot { width: 28px; height: 28px; border: 1px solid var(--border-default); flex-shrink: 0; }
+    .name { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-secondary); }
+    .val  { font-size: 9px; color: var(--fg-tertiary); }
+  </style>
+</head>
+<body>
+<div class="grid">
+  <div class="token"><div class="dot" style="background:var(--fg-primary)"></div><div><div class="name">--fg-primary</div><div class="val">Text · UI · Borders</div></div></div>
+  <div class="token"><div class="dot" style="background:var(--fg-secondary)"></div><div><div class="name">--fg-secondary</div><div class="val">Captions · Meta</div></div></div>
+  <div class="token"><div class="dot" style="background:var(--fg-tertiary)"></div><div><div class="name">--fg-tertiary</div><div class="val">Labels · Placeholders</div></div></div>
+  <div class="token"><div class="dot" style="background:var(--bg-page); border-color:#999;"></div><div><div class="name">--bg-page</div><div class="val">Page background</div></div></div>
+  <div class="token"><div class="dot" style="background:var(--bg-muted); border-color:#999;"></div><div><div class="name">--bg-muted</div><div class="val">Cards · Code blocks</div></div></div>
+  <div class="token"><div class="dot" style="background:var(--bg-invert)"></div><div><div class="name">--bg-invert</div><div class="val">Dark sections</div></div></div>
+</div>
+</body>
+</html>

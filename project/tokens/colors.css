@@ -1,0 +1,40 @@
+/* Mathlacome — Color Tokens */
+:root {
+  /* Base palette */
+  --color-black:       #000000;
+  --color-white:       #FFFFFF;
+  --color-cream:       #F2EDE4;
+  --color-cream-dark:  #E8E1D6;
+  --color-ink:         #111111;
+  --color-ink-muted:   #444444;
+  --color-ink-subtle:  #777777;
+  --color-ink-ghost:   #AAAAAA;
+  --color-rule:        #D4CFC8;
+  --color-rule-dark:   #222222;
+
+  /* Semantic — light mode (default) */
+  --bg-page:           var(--color-white);
+  --bg-surface:        var(--color-white);
+  --bg-muted:          #F8F6F3;
+  --bg-invert:         var(--color-black);
+
+  --fg-primary:        var(--color-black);
+  --fg-secondary:      var(--color-ink-muted);
+  --fg-tertiary:       var(--color-ink-subtle);
+  --fg-disabled:       var(--color-ink-ghost);
+  --fg-invert:         var(--color-white);
+
+  --border-default:    var(--color-rule);
+  --border-strong:     var(--color-ink-muted);
+  --border-invert:     var(--color-rule-dark);
+
+  /* Cream mode overrides (apply .theme-cream to <body> or a section) */
+}
+
+.theme-cream {
+  --bg-page:     var(--color-cream);
+  --bg-surface:  var(--color-cream);
+  --bg-muted:    var(--color-cream-dark);
+  --bg-invert:   var(--color-black);
+  --border-default: var(--color-cream-dark);
+}

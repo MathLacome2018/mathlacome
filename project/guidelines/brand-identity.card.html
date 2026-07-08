@@ -1,0 +1,27 @@
+<!-- @dsCard group="Brand" viewport="700x160" name="Brand Identity" subtitle="Mathlacome — wordmark, editorial tone, black/cream palette" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body { padding: 0; background: var(--bg-page); font-family: var(--font-body); }
+    .split { display: grid; grid-template-columns: 1fr 1fr; height: 160px; }
+    .panel { display: flex; flex-direction: column; justify-content: center; padding: 28px 32px; }
+    .wordmark { font-family: var(--font-display); font-size: 3rem; letter-spacing: 0.04em; line-height: 1; }
+    .tagline { font-family: var(--font-body); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 8px; opacity: 0.5; }
+  </style>
+</head>
+<body>
+<div class="split">
+  <div class="panel" style="background:#fff; border-right:1px solid var(--border-default);">
+    <div class="wordmark" style="color:#000;">Mathlacome</div>
+    <div class="tagline" style="color:#000;">Personal brand · Light mode</div>
+  </div>
+  <div class="panel theme-cream" style="background:var(--color-cream);">
+    <div class="wordmark" style="color:#000;">Mathlacome</div>
+    <div class="tagline" style="color:#000;">Personal brand · Cream mode</div>
+  </div>
+</div>
+</body>
+</html>

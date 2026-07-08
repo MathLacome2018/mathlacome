@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mathlacome — Mathieu Lacome</title>
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+    :root {
+      --c-bg:     #000000;
+      --c-fg:     #FFFFFF;
+      --c-muted:  rgba(255,255,255,0.45);
+      --c-subtle: rgba(255,255,255,0.2);
+      --c-rule:   rgba(255,255,255,0.13);
+    }
+
+    body { background: var(--c-bg); color: var(--c-fg); font-family: var(--font-body); overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+
+    /* Grain */
+    #grain { position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.04; background-repeat: repeat; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--c-rule);
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+    .nav-brand { font-family: var(--font-display); font-size: 1.35rem; letter-spacing: 0.05em; line-height: 1; }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      font-family: var(--font-body); font-size: 10px; font-weight: 500;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--c-muted); transition: color 0.12s;
+    }
+    .nav-links a:hover { color: var(--c-fg); }
+    .nav-num { font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.04em; margin-right: 3px; opacity: 0.35; }
+
+    /* HERO */
+    #hero { min-height: 100vh; padding-top: 48px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; padding: 36px 32px 0; }
+    .hero-descriptor { display: flex; flex-direction: column; gap: 5px; }
+    .hero-tags { font-family: var(--font-body); font-size: 10px; font-weight: 300; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-muted); }
+    .hero-dot-field { width: 400px; height: 360px; position: relative; flex-shrink: 0; }
+    .hero-dot-field::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.22) 1.5px, transparent 1.5px);
+      background-size: 18px 18px;
+      -webkit-mask-image: radial-gradient(ellipse 85% 80% at 65% 45%, black 30%, transparent 80%);
+      mask-image: radial-gradient(ellipse 85% 80% at 65% 45%, black 30%, transparent 80%);
+    }
+    .hero-dot-letter {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 22rem; line-height: 1; letter-spacing: -0.02em;
+      color: rgba(255,255,255,0.04); pointer-events: none; user-select: none;
+    }
+    .hero-wordmark-wrap { padding: 0 28px; }
+    .hero-wordmark { font-family: var(--font-display); font-size: clamp(5rem, 13.5vw, 14rem); line-height: 0.88; letter-spacing: 0.01em; color: var(--c-fg); white-space: nowrap; }
+    .hero-strip { border-top: 1px solid var(--c-rule); padding: 13px 32px; display: flex; align-items: center; gap: 28px; }
+    .strip-item { display: flex; align-items: center; gap: 8px; font-family: var(--font-body); font-size: 10px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-muted); }
+    .strip-bullet { width: 5px; height: 5px; background: var(--c-fg); flex-shrink: 0; }
+
+    /* MARQUEE */
+    .marquee-wrap { overflow: hidden; border-top: 1px solid var(--c-rule); border-bottom: 1px solid var(--c-rule); background: #fff; padding: 9px 0; }
+    .marquee-track { display: flex; width: max-content; animation: marquee 22s linear infinite; }
+    .marquee-track span { font-family: var(--font-display); font-size: 1.05rem; letter-spacing: 0.14em; color: #000; padding: 0 26px; white-space: nowrap; }
+    .marquee-track .sep { color: rgba(0,0,0,0.25); padding: 0; }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* SECTION HEADER */
+    .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 40px; border-bottom: 1px solid var(--c-rule); padding-bottom: 18px; }
+    .section-num { font-family: var(--font-display); font-size: 4.5rem; line-height: 1; letter-spacing: 0.02em; color: var(--c-subtle); flex-shrink: 0; }
+    .section-title { font-family: var(--font-display); font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1; letter-spacing: 0.02em; color: var(--c-fg); }
+
+    /* ARTICLES */
+    #articles { padding: 80px 0; border-bottom: 1px solid var(--c-rule); }
+    #articles .inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+
+    .articles-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .articles-count { font-family: var(--font-body); font-size: 10px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-muted); }
+    .filter-tabs { display: flex; }
+    .filter-tab {
+      font-family: var(--font-body); font-size: 10px; font-weight: 500;
+      letter-spacing: 0.16em; text-transform: uppercase; color: var(--c-muted);
+      background: none; border: 1px solid var(--c-rule); border-right: none;
+      padding: 7px 16px; cursor: pointer; transition: all 0.12s;
+    }
+    .filter-tab:last-child { border-right: 1px solid var(--c-rule); }
+    .filter-tab.active, .filter-tab:hover { color: #000; background: #fff; border-color: #fff; }
+
+    /* Paper list */
+    .paper-list { display: flex; flex-direction: column; }
+
+    .paper-entry {
+      display: grid; grid-template-columns: 72px 1fr auto;
+      gap: 0 24px; align-items: start;
+      padding: 18px 0;
+      border-top: 1px solid var(--c-rule);
+      transition: background 0.12s;
+    }
+    .paper-entry:hover { background: rgba(255,255,255,0.02); }
+
+    /* Book — inverted */
+    .paper-entry.is-book {
+      background: #fff;
+      padding: 20px 16px;
+      margin-bottom: 2px;
+      border-top: none;
+    }
+    .paper-entry.is-book:hover { background: #f5f5f5; }
+    .paper-entry.is-book .paper-year { color: rgba(0,0,0,0.4); }
+    .paper-entry.is-book .paper-title { color: #000; }
+    .paper-entry.is-book .paper-journal { color: rgba(0,0,0,0.5); }
+    .paper-entry.is-book .paper-type { color: rgba(0,0,0,0.4); }
+    .paper-entry.is-book .paper-link { color: #000; border-color: rgba(0,0,0,0.2); }
+    .paper-entry.is-book .paper-link:hover { background: #000; color: #fff; border-color: #000; }
+
+    .paper-year { font-family: var(--font-body); font-size: 11px; font-weight: 400; letter-spacing: 0.1em; color: var(--c-muted); padding-top: 2px; }
+    .paper-body { display: flex; flex-direction: column; gap: 4px; }
+    .paper-type { font-family: var(--font-body); font-size: 9px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--c-muted); }
+    .paper-title { font-family: var(--font-display); font-size: 1.15rem; letter-spacing: 0.02em; line-height: 1.1; color: var(--c-fg); }
+    .paper-entry.is-book .paper-title { font-size: 1.5rem; }
+    .paper-journal { font-family: var(--font-body); font-size: 12px; font-weight: 300; color: var(--c-muted); letter-spacing: 0.04em; }
+    .paper-doi { font-family: 'Courier New', monospace; font-size: 10px; color: rgba(255,255,255,0.25); letter-spacing: 0.03em; margin-top: 2px; }
+
+    .paper-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; padding-top: 2px; flex-shrink: 0; }
+    .paper-link {
+      font-family: var(--font-body); font-size: 9px; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--c-muted); border: 1px solid var(--c-rule);
+      padding: 5px 10px; transition: all 0.12s; white-space: nowrap; cursor: pointer;
+    }
+    .paper-link:hover { color: #000; background: #fff; border-color: #fff; }
+
+    /* Pagination */
+    .pagination { display: flex; align-items: center; justify-content: space-between; padding: 22px 0 0; border-top: 1px solid var(--c-rule); }
+    .pag-info { font-family: var(--font-body); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-muted); }
+    .pag-controls { display: flex; align-items: center; gap: 4px; }
+    .pag-btn {
+      font-family: var(--font-body); font-size: 10px; font-weight: 500; letter-spacing: 0.1em;
+      color: var(--c-muted); background: none; border: 1px solid var(--c-rule);
+      padding: 6px 11px; cursor: pointer; transition: all 0.12s; min-width: 36px;
+    }
+    .pag-btn:hover, .pag-btn.active { color: #000; background: #fff; border-color: #fff; }
+    .pag-btn:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
+    .pag-nav {
+      font-family: var(--font-body); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--c-muted); background: none; border: 1px solid var(--c-rule);
+      padding: 6px 16px; cursor: pointer; transition: all 0.12s;
+    }
+    .pag-nav:hover { color: #000; background: #fff; border-color: #fff; }
+    .pag-nav:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
+
+    /* PRIVATE */
+    #private { background: #080808; border-top: 1px solid var(--c-rule); border-bottom: 1px solid var(--c-rule); padding: 0; }
+    #private .inner { max-width: 1100px; margin: 0 auto; padding: 80px 32px; }
+    .private-body { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+    .private-text p { font-family: var(--font-body); font-size: 14px; font-weight: 300; line-height: 1.75; color: var(--c-muted); margin-bottom: 32px; }
+    .private-access { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+    .private-input { width: 100%; font-family: var(--font-body); font-size: 14px; font-weight: 300; letter-spacing: 0.06em; padding: 13px 16px; background: transparent; border: 1px solid var(--c-rule); color: #fff; outline: none; transition: border-color 0.15s; }
+    .private-input::placeholder { color: rgba(255,255,255,0.2); }
+    .private-input:focus { border-color: var(--c-subtle); }
+    .private-btn { font-family: var(--font-body); font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; background: #fff; color: #000; border: none; padding: 13px 28px; cursor: pointer; transition: opacity 0.15s; }
+    .private-btn:hover { opacity: 0.82; }
+    .lock-visual { display: flex; align-items: center; justify-content: center; border: 1px solid var(--c-rule); aspect-ratio: 1; max-width: 300px; position: relative; overflow: hidden; }
+    .lock-dots { position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 20px 20px; }
+    .lock-label { font-family: var(--font-display); font-size: 7rem; color: rgba(255,255,255,0.05); letter-spacing: 0.04em; position: relative; }
+    .lock-icon-wrap { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .lock-icon { width: 30px; height: 34px; border: 2px solid rgba(255,255,255,0.35); position: relative; }
+    .lock-icon::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 17px; height: 13px; border: 2px solid rgba(255,255,255,0.35); border-bottom: none; border-radius: 9px 9px 0 0; }
+    .lock-tag { font-family: var(--font-body); font-size: 9px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); }
+
+    /* CONTACT */
+    #contact { padding: 80px 0; }
+    #contact .inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+    .contact-body { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    .contact-email { font-family: var(--font-display); font-size: clamp(1.6rem, 3vw, 2.6rem); letter-spacing: 0.02em; line-height: 1.1; border-bottom: 2px solid #fff; padding-bottom: 10px; display: inline-block; transition: opacity 0.12s; }
+    .contact-email:hover { opacity: 0.6; }
+    .contact-desc { font-family: var(--font-body); font-size: 13px; font-weight: 300; line-height: 1.75; color: var(--c-muted); margin-top: 18px; }
+    .contact-form { display: flex; flex-direction: column; gap: 12px; }
+    .form-input { font-family: var(--font-body); font-size: 13px; font-weight: 300; letter-spacing: 0.04em; padding: 12px 0; background: transparent; border: none; border-bottom: 1px solid var(--c-rule); color: #fff; outline: none; transition: border-color 0.15s; width: 100%; }
+    .form-input::placeholder { color: rgba(255,255,255,0.25); }
+    .form-input:focus { border-color: var(--c-subtle); }
+    textarea.form-input { resize: none; height: 88px; }
+    .form-btn { font-family: var(--font-body); font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; background: #fff; color: #000; border: none; padding: 13px 28px; cursor: pointer; align-self: flex-start; margin-top: 4px; transition: opacity 0.15s; }
+    .form-btn:hover { opacity: 0.8; }
+
+    /* FOOTER */
+    footer { border-top: 1px solid var(--c-rule); padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .footer-brand { font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 0.04em; }
+    .footer-copy { font-family: var(--font-body); font-size: 10px; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-muted); }
+  </style>
+</head>
+<body>
+
+<div id="grain"></div>
+
+<nav>
+  <a href="#hero" class="nav-brand">Mathlacome</a>
+  <ul class="nav-links">
+    <li><a href="#articles"><span class="nav-num">01/</span>Articles</a></li>
+    <li><a href="#private"><span class="nav-num">02/</span>Private</a></li>
+    <li><a href="#contact"><span class="nav-num">03/</span>Contact</a></li>
+  </ul>
+</nav>
+
+<section id="hero">
+  <div class="hero-top">
+    <div class="hero-descriptor">
+      <div class="hero-tags">Performance Science &nbsp;–&nbsp; Football Analytics &nbsp;–&nbsp; Strategy</div>
+    </div>
+    <div class="hero-dot-field">
+      <div class="hero-dot-letter">M</div>
+    </div>
+  </div>
+  <div class="hero-wordmark-wrap">
+    <div class="hero-wordmark">MATHLACOME.</div>
+  </div>
+  <div class="hero-strip">
+    <div class="strip-item"><div class="strip-bullet"></div>Performance Science</div>
+    <div class="strip-item"><div class="strip-bullet"></div>Football Intelligence</div>
+    <div class="strip-item"><div class="strip-bullet"></div>Research</div>
+    <div class="strip-item" style="margin-left:auto;">
+      <span style="font-family:var(--font-body);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--c-muted);">▼ Scroll</span>
+    </div>
+  </div>
+</section>
+
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span>Performance Science</span><span class="sep">·</span>
+    <span>Football Analytics</span><span class="sep">·</span>
+    <span>Research</span><span class="sep">·</span>
+    <span>Strategy</span><span class="sep">·</span>
+    <span>Football Intelligence</span><span class="sep">·</span>
+    <span>Published Author</span><span class="sep">·</span>
+    <span>70+ Articles</span><span class="sep">·</span>
+    <span>Performance Science</span><span class="sep">·</span>
+    <span>Football Analytics</span><span class="sep">·</span>
+    <span>Research</span><span class="sep">·</span>
+    <span>Strategy</span><span class="sep">·</span>
+    <span>Football Intelligence</span><span class="sep">·</span>
+    <span>Published Author</span><span class="sep">·</span>
+    <span>70+ Articles</span><span class="sep">·</span>
+  </div>
+</div>
+
+<section id="articles">
+  <div class="inner">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Articles & Publications</h2>
+    </div>
+    <div class="articles-meta">
+      <span class="articles-count">71 Publications &nbsp;·&nbsp; 1 Book &nbsp;·&nbsp; 70 Research Articles</span>
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-tab" onclick="setFilter('book',this)">Book</button>
+        <button class="filter-tab" onclick="setFilter('article',this)">Articles</button>
+      </div>
+    </div>
+    <div class="paper-list" id="paper-list"></div>
+    <div class="pagination">
+      <span class="pag-info" id="pag-info"></span>
+      <div class="pag-controls">
+        <button class="pag-nav" id="btn-prev" onclick="paginate(-1)">← Prev</button>
+        <div id="pag-pages" style="display:flex;gap:4px;"></div>
+        <button class="pag-nav" id="btn-next" onclick="paginate(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="private">
+  <div class="inner">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Private</h2>
+    </div>
+    <div class="private-body">
+      <div class="private-text">
+        <p>This section is reserved for invited readers. It contains extended research notes, unpublished datasets, and draft articles not available in the public feed.</p>
+        <div class="private-access">
+          <input class="private-input" type="password" placeholder="Access key" />
+          <button class="private-btn">Enter</button>
+        </div>
+      </div>
+      <div class="lock-visual">
+        <div class="lock-dots"></div>
+        <div class="lock-label">02</div>
+        <div class="lock-icon-wrap">
+          <div class="lock-icon"></div>
+          <div class="lock-tag">Private Access</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="inner">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Contact</h2>
+    </div>
+    <div class="contact-body">
+      <div>
+        <a href="mailto:mathlacome@gmail.com" class="contact-email">mathlacome@gmail.com</a>
+        <p class="contact-desc">For collaboration, research enquiries, or access requests. I read everything and reply when I can.</p>
+      </div>
+      <form class="contact-form" onsubmit="return false;">
+        <input class="form-input" type="text" placeholder="Name" />
+        <input class="form-input" type="email" placeholder="Email" />
+        <textarea class="form-input" placeholder="Message"></textarea>
+        <button class="form-btn" type="submit">Send Message</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="footer-brand">Mathlacome</span>
+  <span class="footer-copy">© 2026 Mathieu Lacome — All rights reserved</span>
+</footer>
+
+<script>
+// Grain
+(function(){
+  const c=document.createElement('canvas'); c.width=c.height=256;
+  const ctx=c.getContext('2d'), img=ctx.createImageData(256,256), d=img.data;
+  for(let i=0;i<d.length;i+=4){const v=Math.floor(Math.random()*255); d[i]=d[i+1]=d[i+2]=v; d[i+3]=255;}
+  ctx.putImageData(img,0,0);
+  document.getElementById('grain').style.backgroundImage='url('+c.toDataURL()+')';
+})();
+
+// Publications data — replace with your actual titles, journals and DOIs
+const PUBS = [
+  { type:'book', year:2022, title:'Football Analytics — From Data to Decision', journal:'Publisher · ISBN: 978-X-XXXX-XXXX-X', doi:'', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2024, title:'High-Speed Running Demands in Elite Football: A Positional Analysis', journal:'International Journal of Sports Physiology and Performance', doi:'DOI: 10.1123/ijspp.2024-XXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2024, title:'Match-to-Match Variation in Physical Output: Implications for Load Monitoring', journal:'Journal of Sports Sciences', doi:'DOI: 10.1080/02640414.2024.XXXXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2023, title:'Pressing Intensity and Recovery in Professional Football: Implications for Periodisation', journal:'Journal of Sports Sciences', doi:'DOI: 10.1080/02640414.2023.XXXXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2023, title:'GPS-Derived Metrics and Their Relationship to Match Outcome in Elite Football', journal:'Science & Medicine in Football', doi:'DOI: 10.1080/24733938.2023.XXXXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2023, title:'Acceleration and Deceleration Demands in Professional Football: A Systematic Review', journal:'Sports Medicine', doi:'DOI: 10.1007/s40279-023-XXXXX-X', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2022, title:'Expected Goals as a Predictor of League Performance: A Multi-Season Study', journal:'European Journal of Sport Science', doi:'DOI: 10.1080/17461391.2022.XXXXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2022, title:'Positional Differences in Physical and Physiological Demands During Official Matches', journal:'International Journal of Performance Analysis in Sport', doi:'DOI: 10.1080/24748668.2022.XXXXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2021, title:'Neuromuscular Fatigue Following Congested Fixture Periods in Professional Football', journal:'British Journal of Sports Medicine', doi:'DOI: 10.1136/bjsports-2021-XXXXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2021, title:'Tactical Periodisation and Physical Performance Outcomes in Elite Football', journal:'International Journal of Performance Analysis in Sport', doi:'DOI: 10.1080/24748668.2021.XXXXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2020, title:'Sprint Mechanical Properties and Their Association with Sprint Performance in Football Players', journal:'Journal of Strength and Conditioning Research', doi:'DOI: 10.1519/JSC.0000000000000XXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2020, title:'Physical and Physiological Demands of Congested Fixtures in Elite Football: A Systematic Review', journal:'Sports Medicine', doi:'DOI: 10.1007/s40279-020-XXXXX-X', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2019, title:'Contextual Variables and Their Influence on High-Speed Running in Elite Football', journal:'International Journal of Sports Physiology and Performance', doi:'DOI: 10.1123/ijspp.2019-XXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2019, title:'Heart Rate and Metabolic Responses to Small-Sided Games in Professional Football', journal:'Journal of Human Kinetics', doi:'DOI: 10.2478/hukin-2019-XXXX', doi_url:'#', pdf_url:'#' },
+  { type:'article', year:2018, title:'Workload and Recovery in Elite Football: Current Knowledge and Future Directions', journal:'Research in Sports Medicine', doi:'DOI: 10.1080/15438627.2018.XXXXXX', doi_url:'#', pdf_url:'#' },
+];
+
+const PER_PAGE = 10;
+let currentPage = 0;
+let activeFilter = 'all';
+
+function filteredPubs() {
+  return activeFilter === 'all' ? PUBS : PUBS.filter(p => p.type === activeFilter);
+}
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  currentPage = 0;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function paginate(dir) {
+  const total = Math.ceil(filteredPubs().length / PER_PAGE);
+  currentPage = Math.max(0, Math.min(currentPage + dir, total - 1));
+  render();
+  document.getElementById('articles').scrollIntoView ? window.scrollTo({ top: document.getElementById('articles').offsetTop - 60, behavior: 'smooth' }) : null;
+}
+
+function render() {
+  const pubs = filteredPubs();
+  const total = Math.ceil(pubs.length / PER_PAGE);
+  const start = currentPage * PER_PAGE;
+  const page = pubs.slice(start, start + PER_PAGE);
+  const list = document.getElementById('paper-list');
+
+  list.innerHTML = page.map(p => {
+    const isBook = p.type === 'book';
+    return `<div class="paper-entry${isBook ? ' is-book' : ''}" data-type="${p.type}">
+      <div class="paper-year">${p.year}</div>
+      <div class="paper-body">
+        <div class="paper-type">${isBook ? 'Book' : 'Research Article'}</div>
+        <div class="paper-title">${p.title}</div>
+        <div class="paper-journal">${p.journal}</div>
+        ${p.doi ? `<div class="paper-doi">${p.doi}</div>` : ''}
+      </div>
+      <div class="paper-actions">
+        <a href="${p.doi_url}" class="paper-link" target="_blank">${isBook ? 'View →' : 'DOI →'}</a>
+        <a href="${p.pdf_url}" class="paper-link" target="_blank">↓ PDF</a>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Pagination info
+  document.getElementById('pag-info').textContent =
+    `Showing ${start + 1}–${Math.min(start + PER_PAGE, pubs.length)} of ${pubs.length} publications`;
+
+  // Page buttons
+  const pagesEl = document.getElementById('pag-pages');
+  pagesEl.innerHTML = '';
+  const maxBtns = Math.min(total, 7);
+  for (let i = 0; i < maxBtns; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'pag-btn' + (i === currentPage ? ' active' : '');
+    btn.textContent = i + 1;
+    btn.onclick = (()=>{ const n=i; return ()=>{ currentPage=n; render(); }; })();
+    pagesEl.appendChild(btn);
+  }
+  if (total > 7) {
+    const ellipsis = document.createElement('button');
+    ellipsis.className = 'pag-btn'; ellipsis.textContent = '…'; ellipsis.disabled = true;
+    pagesEl.appendChild(ellipsis);
+  }
+
+  document.getElementById('btn-prev').disabled = currentPage === 0;
+  document.getElementById('btn-next').disabled = currentPage >= total - 1;
+}
+
+render();
+</script>
+
+</body>
+</html>

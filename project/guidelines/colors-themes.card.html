@@ -1,0 +1,33 @@
+<!-- @dsCard group="Colors" viewport="700x100" name="Cream Theme" subtitle="Warm alternative to pure white — apply .theme-cream to any section" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body { padding: 0; font-family: var(--font-body); }
+    .band { padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; }
+    .chips { display: flex; gap: 8px; }
+    .chip { width: 40px; height: 40px; border: 1px solid rgba(0,0,0,0.12); }
+  </style>
+</head>
+<body>
+<div class="band theme-cream" style="background:var(--color-cream);">
+  <span class="label" style="color:var(--fg-primary)">.theme-cream — warm page</span>
+  <div class="chips">
+    <div class="chip" style="background:#F2EDE4;" title="--color-cream"></div>
+    <div class="chip" style="background:#E8E1D6;" title="--color-cream-dark"></div>
+    <div class="chip" style="background:#000000;" title="--fg-primary on cream"></div>
+  </div>
+</div>
+<div class="band" style="background:#000; color:#fff;">
+  <span class="label">.theme-dark — inverted section</span>
+  <div class="chips">
+    <div class="chip" style="background:#000;" title="--bg-invert"></div>
+    <div class="chip" style="background:#222;" title="--border-invert"></div>
+    <div class="chip" style="background:#fff;" title="--fg-invert"></div>
+  </div>
+</div>
+</body>
+</html>

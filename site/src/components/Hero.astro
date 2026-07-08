@@ -1,0 +1,124 @@
+<section id="hero">
+  <div class="hero-top">
+    <div class="hero-descriptor">
+      <div class="hero-tags">Performance Science &nbsp;–&nbsp; Football Analytics &nbsp;–&nbsp; Strategy</div>
+    </div>
+    <div class="hero-dot-field">
+      <div class="hero-dot-letter">M</div>
+    </div>
+  </div>
+  <div class="hero-wordmark-wrap">
+    <div class="hero-wordmark">MATHLACOME.</div>
+  </div>
+  <div class="hero-strip">
+    <div class="strip-item"><div class="strip-bullet"></div>Performance Science</div>
+    <div class="strip-item"><div class="strip-bullet"></div>Football Intelligence</div>
+    <div class="strip-item"><div class="strip-bullet"></div>Research</div>
+    <div class="strip-item strip-scroll"><span class="scroll-label">▼ Scroll</span></div>
+  </div>
+</section>
+
+<style>
+  #hero {
+    min-height: 100vh;
+    padding-top: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 36px 32px 0;
+  }
+  .hero-descriptor {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .hero-tags {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+  }
+  .hero-dot-field {
+    width: 400px;
+    height: 360px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .hero-dot-field::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.22) 1.5px, transparent 1.5px);
+    background-size: 18px 18px;
+    -webkit-mask-image: radial-gradient(ellipse 85% 80% at 65% 45%, black 30%, transparent 80%);
+    mask-image: radial-gradient(ellipse 85% 80% at 65% 45%, black 30%, transparent 80%);
+  }
+  .hero-dot-letter {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 22rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-wordmark-wrap {
+    padding: 0 28px;
+  }
+  .hero-wordmark {
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 13.5vw, 14rem);
+    line-height: 0.88;
+    letter-spacing: 0.01em;
+    color: var(--fg-primary);
+    white-space: nowrap;
+  }
+  .hero-strip {
+    border-top: 1px solid var(--border-default);
+    padding: 13px 32px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .strip-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+  }
+  .strip-bullet {
+    width: 5px;
+    height: 5px;
+    background: var(--fg-primary);
+    flex-shrink: 0;
+  }
+  .strip-scroll {
+    margin-left: auto;
+  }
+  .scroll-label {
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+  }
+</style>

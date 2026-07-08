@@ -1,0 +1,42 @@
+/* Mathlacome — Typography Tokens */
+:root {
+  /* Font families */
+  --font-display:  'Bebas Neue', 'Arial Narrow', sans-serif;
+  --font-body:     'Oswald', 'Arial Narrow', sans-serif;
+  --font-mono:     'Courier New', 'Courier', monospace;
+
+  /* Font weights (Oswald variable axis) */
+  --weight-extralight: 200;
+  --weight-light:      300;
+  --weight-regular:    400;
+  --weight-medium:     500;
+  --weight-semibold:   600;
+  --weight-bold:       700;
+
+  /* Type scale — display (Bebas Neue) */
+  --text-display-2xl: 6rem;      /* 96px — hero title */
+  --text-display-xl:  4.5rem;    /* 72px — page hero */
+  --text-display-lg:  3rem;      /* 48px — section title */
+  --text-display-md:  2.25rem;   /* 36px — card title large */
+  --text-display-sm:  1.75rem;   /* 28px — card title */
+
+  /* Type scale — body / UI (Oswald) */
+  --text-xl:   1.5rem;    /* 24px */
+  --text-lg:   1.25rem;   /* 20px */
+  --text-md:   1rem;      /* 16px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-xs:   0.75rem;   /* 12px */
+  --text-2xs:  0.625rem;  /* 10px */
+
+  /* Line heights */
+  --leading-tight:   1.05;
+  --leading-snug:    1.2;
+  --leading-normal:  1.45;
+  --leading-relaxed: 1.65;
+
+  /* Letter spacing */
+  --tracking-display: 0.02em;
+  --tracking-wide:    0.08em;
+  --tracking-wider:   0.14em;
+  --tracking-widest:  0.2em;
+}

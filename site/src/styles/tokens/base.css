@@ -1,0 +1,57 @@
+/* Mathlacome — Base / Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--fg-primary);
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+}
+
+a {
+  color: var(--fg-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--border-default);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--duration-fast) var(--ease-default);
+}
+
+a:hover {
+  text-decoration-color: var(--fg-primary);
+}
+
+img, video {
+  display: block;
+  max-width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-display);
+}
+
+p {
+  font-family: var(--font-body);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-relaxed);
+}
+
+hr {
+  border: none;
+  border-top: var(--border-width) solid var(--border-default);
+}

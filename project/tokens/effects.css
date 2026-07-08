@@ -1,0 +1,19 @@
+/* Mathlacome — Effects Tokens */
+:root {
+  /* Shadows — minimal, no blur editorial style */
+  --shadow-none: none;
+  --shadow-rule: 0 1px 0 0 var(--border-default);
+  --shadow-card: 0 0 0 1px var(--border-default);
+  --shadow-card-hover: 0 0 0 1px var(--fg-primary);
+
+  /* Transitions */
+  --duration-fast:   120ms; /* @kind other */
+  --duration-base:   200ms; /* @kind other */
+  --duration-slow:   350ms; /* @kind other */
+  --ease-default:    cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */
+  --ease-out:        cubic-bezier(0, 0, 0.2, 1); /* @kind other */
+
+  /* Opacity */
+  --opacity-disabled: 0.38; /* @kind other */
+  --opacity-muted:    0.6;  /* @kind other */
+}

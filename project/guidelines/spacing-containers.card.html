@@ -1,0 +1,26 @@
+<!-- @dsCard group="Spacing" viewport="700x120" name="Layout Containers" subtitle="Max-width breakpoints for responsive content" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body { padding: 20px; background: var(--bg-page); font-family: var(--font-body); }
+    .row { display: flex; flex-direction: column; gap: 8px; }
+    .item { display: flex; align-items: center; gap: 12px; }
+    .bar { height: 14px; background: var(--fg-primary); opacity: 0.12; position: relative; }
+    .bar-fill { height: 14px; background: var(--fg-primary); position: absolute; left: 0; top: 0; }
+    .lbl { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-secondary); white-space: nowrap; width: 90px; }
+    .val { font-size: 10px; color: var(--fg-tertiary); width: 50px; }
+  </style>
+</head>
+<body>
+<div class="row">
+  <div class="item"><div class="lbl">SM</div><div class="bar" style="width:200px;"><div class="bar-fill" style="width:89px;opacity:1;"></div></div><div class="val">640px</div></div>
+  <div class="item"><div class="lbl">MD</div><div class="bar" style="width:200px;"><div class="bar-fill" style="width:107px;opacity:1;"></div></div><div class="val">768px</div></div>
+  <div class="item"><div class="lbl">LG</div><div class="bar" style="width:200px;"><div class="bar-fill" style="width:142px;opacity:1;"></div></div><div class="val">1024px</div></div>
+  <div class="item"><div class="lbl">XL</div><div class="bar" style="width:200px;"><div class="bar-fill" style="width:178px;opacity:1;"></div></div><div class="val">1280px</div></div>
+  <div class="item"><div class="lbl">2XL</div><div class="bar" style="width:200px;"><div class="bar-fill" style="width:200px;opacity:1;"></div></div><div class="val">1440px</div></div>
+</div>
+</body>
+</html>

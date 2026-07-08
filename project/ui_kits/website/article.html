@@ -1,0 +1,125 @@
+<!-- @dsCard group="Website" viewport="1280x900" name="Website — Article" subtitle="Single article reading view with pull quote and metadata" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Article — Mathlacome</title>
+  <link rel="stylesheet" href="../../styles.css">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+    body { background: var(--bg-page); color: var(--fg-primary); }
+    a { color: inherit; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { Nav, Badge, Button, Divider, PullQuote, ArticleCard } = window.DesignSystem_6c4953;
+
+const RELATED = [
+  { title: "On the Elegance of Mathematical Proof", category: "Mathematics", date: "Jun 2026", readTime: "5 min read", excerpt: "What separates a beautiful proof from a merely correct one?" },
+  { title: "Entropy and Information", category: "Science", date: "May 2026", readTime: "7 min read", excerpt: "Shannon's entropy formulation and its connections to thermodynamics." },
+  { title: "Expected Threat: A Spatial Model", category: "Data", date: "May 2026", readTime: "11 min read", excerpt: "Building an xT model from first principles using spatial probability distributions." },
+];
+
+const NAV_LINKS = [
+  { label: 'Articles', href: '#' },
+  { label: 'Science', href: '#' },
+  { label: 'Football', href: '#' },
+  { label: 'About', href: '#' },
+];
+
+function ArticlePage() {
+  return (
+    <div>
+      <Nav brand="Mathlacome" links={NAV_LINKS} cta={{ label: 'Subscribe', href: '#' }} theme="light" sticky={true} />
+
+      {/* Article header */}
+      <header style={{ maxWidth: 760, margin: '0 auto', padding: '56px 32px 40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <Badge variant="solid">Science</Badge>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-tertiary)' }}>Jul 2026 · 6 min read</span>
+        </div>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '4rem', lineHeight: 1.02, letterSpacing: '0.02em', marginBottom: 20 }}>
+          The Geometry of Space-Time
+        </h1>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)', fontWeight: 300, lineHeight: 1.65, color: 'var(--fg-secondary)', marginBottom: 32 }}>
+          How differential geometry and topology provide the mathematical scaffolding upon which our understanding of the physical universe rests.
+        </p>
+        <Divider />
+      </header>
+
+      {/* Hero image */}
+      <div style={{ maxWidth: 960, margin: '0 auto 48px', padding: '0 32px' }}>
+        <div style={{ aspectRatio: '16/7', background: 'var(--bg-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-tertiary)', fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', borderTop: '1px solid var(--border-default)' }}>
+          Article hero image
+        </div>
+      </div>
+
+      {/* Article body */}
+      <article style={{ maxWidth: 680, margin: '0 auto', padding: '0 32px 64px' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', fontWeight: 300, lineHeight: 1.75, color: 'var(--fg-primary)', marginBottom: 24 }}>
+          When Einstein formulated his general theory of relativity in 1915, he required a mathematics that most physicists of his day had never encountered. Riemannian geometry — the study of curved manifolds — became the language through which gravity was recast not as a force, but as the curvature of space-time itself.
+        </p>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', fontWeight: 300, lineHeight: 1.75, color: 'var(--fg-primary)', marginBottom: 32 }}>
+          The central object is the metric tensor, a field that encodes how distances are measured at every point in a curved manifold. From the metric, one derives the Christoffel symbols, the Riemann curvature tensor, and ultimately the Einstein field equations — ten coupled nonlinear partial differential equations relating the geometry of space-time to the distribution of energy and momentum.
+        </p>
+
+        <PullQuote
+          quote="Geometry is not a property of space. It is a description of the relationships between objects within it."
+          attribution="Mathlacome"
+          style={{ margin: '32px 0' }}
+        />
+
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', fontWeight: 300, lineHeight: 1.75, color: 'var(--fg-primary)', marginBottom: 24 }}>
+          Topology enters when we ask not about local distances but about global shape. A torus and a sphere have different topologies: you cannot continuously deform one into the other without tearing. In cosmology, the topology of the universe — its large-scale connectedness — is an open observational question.
+        </p>
+
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', letterSpacing: '0.02em', margin: '40px 0 16px' }}>
+          Geodesics and the Equivalence Principle
+        </h2>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', fontWeight: 300, lineHeight: 1.75, color: 'var(--fg-primary)', marginBottom: 24 }}>
+          In flat Euclidean space, the shortest path between two points is a straight line. On a curved manifold, this generalises to a geodesic — the path that parallel-transports its own tangent vector. Freely falling objects in a gravitational field follow geodesics through curved space-time.
+        </p>
+
+        <Divider style={{ margin: '40px 0' }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Button variant="text" size="sm">← Previous Article</Button>
+          <Button variant="ghost" size="sm">Share</Button>
+          <Button variant="text" size="sm">Next Article →</Button>
+        </div>
+      </article>
+
+      {/* Related */}
+      <section style={{ borderTop: '1px solid var(--border-default)', background: 'var(--bg-muted)', padding: '48px 32px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--fg-tertiary)', marginBottom: 24 }}>Related Articles</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0 40px' }}>
+            {RELATED.map((a, i) => (
+              <ArticleCard key={i} title={a.title} category={a.category} date={a.date} readTime={a.readTime} excerpt={a.excerpt} layout="minimal" href="#" />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer style={{ borderTop: '1px solid var(--border-default)', padding: '32px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', letterSpacing: '0.04em' }}>Mathlacome</span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.1em', color: 'var(--fg-tertiary)' }}>© 2026 Mathlacome</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<ArticlePage />);
+</script>
+</body>
+</html>
