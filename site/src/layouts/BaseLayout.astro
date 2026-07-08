@@ -1,0 +1,57 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+}
+
+const { title = 'Mathlacome — Mathieu Lacome' } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+  </head>
+  <body class="theme-dark">
+    <div id="grain" aria-hidden="true"></div>
+    <slot />
+    <script>
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const img = ctx.createImageData(256, 256);
+        const d = img.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const v = Math.floor(Math.random() * 255);
+          d[i] = d[i + 1] = d[i + 2] = v;
+          d[i + 3] = 255;
+        }
+        ctx.putImageData(img, 0, 0);
+        const grain = document.getElementById('grain');
+        if (grain) grain.style.backgroundImage = `url(${canvas.toDataURL()})`;
+      }
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  #grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.04;
+    background-repeat: repeat;
+  }
+</style>

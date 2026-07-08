@@ -1,0 +1,114 @@
+---
+import SectionHeader from './SectionHeader.astro';
+---
+
+<section id="contact">
+  <div class="inner">
+    <SectionHeader num="03" title="Contact" />
+    <div class="contact-body">
+      <div>
+        <a href="mailto:mathlacome@gmail.com" class="contact-email">mathlacome@gmail.com</a>
+        <p class="contact-desc">For collaboration, research enquiries, or access requests. I read everything and reply when I can.</p>
+      </div>
+      <form class="contact-form">
+        <input class="form-input" type="text" placeholder="Name" />
+        <input class="form-input" type="email" placeholder="Email" />
+        <textarea class="form-input" placeholder="Message"></textarea>
+        <button class="form-btn" type="submit">Send Message</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+  #contact {
+    padding: 80px 0;
+  }
+  #contact .inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  .contact-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+  .contact-email {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    color: var(--fg-primary);
+    text-decoration: none;
+    border-bottom: 2px solid var(--fg-primary);
+    padding-bottom: 10px;
+    display: inline-block;
+    transition: opacity 0.12s;
+  }
+  .contact-email:hover {
+    opacity: 0.6;
+  }
+  .contact-desc {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.75;
+    color: var(--fg-secondary);
+    margin-top: 18px;
+  }
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .form-input {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    padding: 12px 0;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-default);
+    color: var(--fg-primary);
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .form-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+  }
+  .form-input:focus {
+    border-color: var(--fg-tertiary);
+  }
+  textarea.form-input {
+    resize: none;
+    height: 88px;
+  }
+  .form-btn {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 13px 28px;
+    cursor: pointer;
+    align-self: flex-start;
+    margin-top: 4px;
+    transition: opacity 0.15s;
+  }
+  .form-btn:hover {
+    opacity: 0.8;
+  }
+</style>
+
+<script>
+  document.querySelector('.contact-form')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+  });
+</script>

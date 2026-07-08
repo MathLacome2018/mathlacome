@@ -1,0 +1,428 @@
+---
+import { getCollection } from 'astro:content';
+import SectionHeader from './SectionHeader.astro';
+
+const publications = (await getCollection('publications')).sort((a, b) => a.data.order - b.data.order).map((p) => p.data);
+
+const bookCount = publications.filter((p) => p.type === 'book').length;
+const articleCount = publications.filter((p) => p.type === 'article').length;
+---
+
+<section id="articles">
+  <div class="inner">
+    <SectionHeader num="01" title="Articles & Publications" />
+    <div class="articles-meta">
+      <span class="articles-count"
+        >{publications.length} Publications &nbsp;·&nbsp; {bookCount} Book &nbsp;·&nbsp; {articleCount} Research Articles</span
+      >
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">All</button>
+        <button class="filter-tab" data-filter="book">Book</button>
+        <button class="filter-tab" data-filter="article">Articles</button>
+      </div>
+    </div>
+    <div class="paper-list" id="paper-list"></div>
+    <div class="pagination">
+      <span class="pag-info" id="pag-info"></span>
+      <div class="pag-controls">
+        <button class="pag-nav" id="btn-prev">← Prev</button>
+        <div id="pag-pages" class="pag-pages"></div>
+        <button class="pag-nav" id="btn-next">Next →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="application/json" id="pubs-data" set:html={JSON.stringify(publications)} is:inline />
+
+<style>
+  #articles {
+    padding: 80px 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+  #articles .inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  .articles-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .articles-count {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+  }
+  .filter-tabs {
+    display: flex;
+  }
+  .filter-tab {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    border-right: none;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .filter-tab:last-child {
+    border-right: 1px solid var(--border-default);
+  }
+  .filter-tab.active,
+  .filter-tab:hover {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+
+  .paper-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  :global(.paper-entry) {
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: 0 24px;
+    align-items: start;
+    padding: 18px 0;
+    border-top: 1px solid var(--border-default);
+    transition: background 0.12s;
+  }
+  :global(.paper-entry:hover) {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  :global(.paper-entry.is-book) {
+    background: #fff;
+    padding: 20px 16px;
+    margin-bottom: 2px;
+    border-top: none;
+  }
+  :global(.paper-entry.is-book:hover) {
+    background: #f5f5f5;
+  }
+  :global(.paper-entry.is-book .paper-year) {
+    color: rgba(0, 0, 0, 0.4);
+  }
+  :global(.paper-entry.is-book .paper-title) {
+    color: #000;
+  }
+  :global(.paper-entry.is-book .paper-journal) {
+    color: rgba(0, 0, 0, 0.5);
+  }
+  :global(.paper-entry.is-book .paper-type) {
+    color: rgba(0, 0, 0, 0.4);
+  }
+  :global(.paper-entry.is-book .paper-link) {
+    color: #000;
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+  :global(.paper-entry.is-book .paper-link:hover) {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+  }
+
+  :global(.paper-year) {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    color: var(--fg-secondary);
+    padding-top: 2px;
+  }
+  :global(.paper-body) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  :global(.paper-type) {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+  }
+  :global(.paper-title) {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    color: var(--fg-primary);
+  }
+  :global(.paper-entry.is-book .paper-title) {
+    font-size: 1.5rem;
+  }
+  :global(.paper-journal) {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--fg-secondary);
+    letter-spacing: 0.04em;
+  }
+  :global(.paper-doi) {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.25);
+    letter-spacing: 0.03em;
+    margin-top: 2px;
+  }
+
+  :global(.paper-actions) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+  :global(.paper-link) {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    text-decoration: none;
+    border: 1px solid var(--border-default);
+    padding: 5px 10px;
+    transition: all 0.12s;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  :global(.paper-link:hover) {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 0 0;
+    border-top: 1px solid var(--border-default);
+  }
+  .pag-info {
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+  }
+  .pag-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .pag-pages {
+    display: flex;
+    gap: 4px;
+  }
+  :global(.pag-btn) {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    padding: 6px 11px;
+    cursor: pointer;
+    transition: all 0.12s;
+    min-width: 36px;
+  }
+  :global(.pag-btn:hover),
+  :global(.pag-btn.active) {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+  :global(.pag-btn:disabled) {
+    opacity: 0.2;
+    cursor: default;
+    pointer-events: none;
+  }
+  .pag-nav {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    padding: 6px 16px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .pag-nav:hover {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+  .pag-nav:disabled {
+    opacity: 0.2;
+    cursor: default;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  interface Publication {
+    type: 'book' | 'article';
+    year: number;
+    title: string;
+    journal: string;
+    doi: string;
+    doiUrl: string;
+    pdfUrl: string;
+    order: number;
+  }
+
+  const PER_PAGE = 10;
+  let currentPage = 0;
+  let activeFilter = 'all';
+
+  const dataEl = document.getElementById('pubs-data');
+  const PUBS: Publication[] = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+
+  const articlesEl = document.getElementById('articles');
+  const listEl = document.getElementById('paper-list');
+  const infoEl = document.getElementById('pag-info');
+  const pagesEl = document.getElementById('pag-pages');
+  const prevBtn = document.getElementById('btn-prev') as HTMLButtonElement | null;
+  const nextBtn = document.getElementById('btn-next') as HTMLButtonElement | null;
+
+  function filteredPubs(): Publication[] {
+    return activeFilter === 'all' ? PUBS : PUBS.filter((p) => p.type === activeFilter);
+  }
+
+  function buildEntry(p: Publication): HTMLElement {
+    const isBook = p.type === 'book';
+    const entry = document.createElement('div');
+    entry.className = 'paper-entry' + (isBook ? ' is-book' : '');
+    entry.dataset.type = p.type;
+
+    const year = document.createElement('div');
+    year.className = 'paper-year';
+    year.textContent = String(p.year);
+
+    const body = document.createElement('div');
+    body.className = 'paper-body';
+
+    const type = document.createElement('div');
+    type.className = 'paper-type';
+    type.textContent = isBook ? 'Book' : 'Research Article';
+
+    const title = document.createElement('div');
+    title.className = 'paper-title';
+    title.textContent = p.title;
+
+    const journal = document.createElement('div');
+    journal.className = 'paper-journal';
+    journal.textContent = p.journal;
+
+    body.append(type, title, journal);
+
+    if (p.doi) {
+      const doi = document.createElement('div');
+      doi.className = 'paper-doi';
+      doi.textContent = p.doi;
+      body.append(doi);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'paper-actions';
+
+    const doiLink = document.createElement('a');
+    doiLink.className = 'paper-link';
+    doiLink.href = p.doiUrl;
+    doiLink.target = '_blank';
+    doiLink.rel = 'noopener noreferrer';
+    doiLink.textContent = isBook ? 'View →' : 'DOI →';
+
+    const pdfLink = document.createElement('a');
+    pdfLink.className = 'paper-link';
+    pdfLink.href = p.pdfUrl;
+    pdfLink.target = '_blank';
+    pdfLink.rel = 'noopener noreferrer';
+    pdfLink.textContent = '↓ PDF';
+
+    actions.append(doiLink, pdfLink);
+    entry.append(year, body, actions);
+    return entry;
+  }
+
+  function render() {
+    if (!listEl || !infoEl || !pagesEl || !prevBtn || !nextBtn) return;
+
+    const pubs = filteredPubs();
+    const total = Math.ceil(pubs.length / PER_PAGE) || 1;
+    const start = currentPage * PER_PAGE;
+    const page = pubs.slice(start, start + PER_PAGE);
+
+    listEl.replaceChildren(...page.map(buildEntry));
+
+    infoEl.textContent = `Showing ${pubs.length === 0 ? 0 : start + 1}–${Math.min(start + PER_PAGE, pubs.length)} of ${pubs.length} publications`;
+
+    pagesEl.replaceChildren();
+    const maxBtns = Math.min(total, 7);
+    for (let i = 0; i < maxBtns; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'pag-btn' + (i === currentPage ? ' active' : '');
+      btn.textContent = String(i + 1);
+      btn.addEventListener('click', () => {
+        currentPage = i;
+        render();
+      });
+      pagesEl.append(btn);
+    }
+    if (total > 7) {
+      const ellipsis = document.createElement('button');
+      ellipsis.className = 'pag-btn';
+      ellipsis.textContent = '…';
+      ellipsis.disabled = true;
+      pagesEl.append(ellipsis);
+    }
+
+    prevBtn.disabled = currentPage === 0;
+    nextBtn.disabled = currentPage >= total - 1;
+  }
+
+  function paginate(dir: number) {
+    const total = Math.ceil(filteredPubs().length / PER_PAGE) || 1;
+    currentPage = Math.max(0, Math.min(currentPage + dir, total - 1));
+    render();
+    if (articlesEl) window.scrollTo({ top: articlesEl.offsetTop - 60, behavior: 'smooth' });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.filter-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeFilter = btn.dataset.filter ?? 'all';
+      currentPage = 0;
+      document.querySelectorAll('.filter-tab').forEach((t) => t.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    });
+  });
+
+  prevBtn?.addEventListener('click', () => paginate(-1));
+  nextBtn?.addEventListener('click', () => paginate(1));
+
+  render();
+</script>

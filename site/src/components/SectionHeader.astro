@@ -1,0 +1,39 @@
+---
+interface Props {
+  num: string;
+  title: string;
+}
+
+const { num, title } = Astro.props;
+---
+
+<div class="section-header">
+  <span class="section-num">{num}</span>
+  <h2 class="section-title">{title}</h2>
+</div>
+
+<style>
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border-default);
+    padding-bottom: 18px;
+  }
+  .section-num {
+    font-family: var(--font-display);
+    font-size: 4.5rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--fg-tertiary);
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--fg-primary);
+  }
+</style>
