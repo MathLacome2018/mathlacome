@@ -1,0 +1,163 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+
+const error = Astro.url.searchParams.get('error');
+const notice = Astro.url.searchParams.get('notice');
+const email = Astro.url.searchParams.get('email') ?? '';
+const next = Astro.url.searchParams.get('next') ?? '/private';
+---
+
+<BaseLayout title="Sign In — Mathlacome">
+  <Nav active="private" />
+
+  <main class="auth-page">
+    <div class="auth-header">
+      <div class="page-label">02 / Private Access</div>
+      <h1 class="page-title">Sign In.</h1>
+    </div>
+
+    <form class="auth-form" method="POST" action="/api/auth/login">
+      <input type="hidden" name="next" value={next} />
+
+      {error && <p class="auth-message is-error">{error}</p>}
+      {notice && <p class="auth-message">{notice}</p>}
+
+      <label class="auth-field">
+        <span>Email</span>
+        <input type="email" name="email" required autocomplete="email" value={email} />
+      </label>
+      <label class="auth-field">
+        <span>Password</span>
+        <input type="password" name="password" required autocomplete="current-password" />
+      </label>
+
+      <button class="auth-submit" type="submit">Enter →</button>
+    </form>
+
+    <p class="auth-switch">No account yet? <a href="/private/signup">Create one →</a></p>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .auth-page {
+    min-height: 100vh;
+    padding: 140px 32px 96px;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .auth-header {
+    margin-bottom: 48px;
+  }
+  .page-label {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-label::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--fg-primary);
+  }
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+  }
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .auth-message {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    color: var(--fg-secondary);
+    border-top: 2px solid var(--fg-primary);
+    padding-top: 12px;
+  }
+  .auth-message.is-error {
+    color: var(--fg-primary);
+  }
+  .auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .auth-field span {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+  }
+  .auth-field input {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    padding: 13px 16px;
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--fg-primary);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .auth-field input:focus {
+    border-color: var(--fg-tertiary);
+  }
+  .auth-submit {
+    margin-top: 8px;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 14px 28px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .auth-submit:hover {
+    opacity: 0.82;
+  }
+  .auth-switch {
+    margin-top: 32px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--fg-secondary);
+  }
+  .auth-switch a {
+    color: var(--fg-primary);
+    text-decoration: underline;
+    text-decoration-color: var(--border-default);
+    text-underline-offset: 3px;
+  }
+  .auth-switch a:hover {
+    text-decoration-color: var(--fg-primary);
+  }
+</style>

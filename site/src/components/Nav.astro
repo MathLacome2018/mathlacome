@@ -1,9 +1,17 @@
+---
+interface Props {
+  active?: 'private';
+}
+
+const { active } = Astro.props;
+---
+
 <nav>
-  <a href="#hero" class="nav-brand">Mathlacome</a>
+  <a href="/" class="nav-brand">Mathlacome</a>
   <ul class="nav-links">
-    <li><a href="#articles"><span class="nav-num">01/</span>Articles</a></li>
-    <li><a href="#private"><span class="nav-num">02/</span>Private</a></li>
-    <li><a href="#contact"><span class="nav-num">03/</span>Contact</a></li>
+    <li><a href="/#articles"><span class="nav-num">01/</span>Articles</a></li>
+    <li><a href="/private" class:list={{ active: active === 'private' }}><span class="nav-num">02/</span>Private</a></li>
+    <li><a href="/#contact"><span class="nav-num">03/</span>Contact</a></li>
   </ul>
 </nav>
 
@@ -47,7 +55,8 @@
     text-decoration: none;
     transition: color 0.12s;
   }
-  .nav-links a:hover {
+  .nav-links a:hover,
+  .nav-links a.active {
     color: var(--fg-primary);
   }
   .nav-num {

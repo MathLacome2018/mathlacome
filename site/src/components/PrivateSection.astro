@@ -12,8 +12,7 @@ import SectionHeader from './SectionHeader.astro';
           draft articles not available in the public feed.
         </p>
         <div class="private-access">
-          <input class="private-input" type="password" placeholder="Access key" />
-          <button class="private-btn">Enter</button>
+          <a class="private-btn" href="/private">Enter Private Space →</a>
         </div>
       </div>
       <div class="lock-visual">
@@ -60,26 +59,8 @@ import SectionHeader from './SectionHeader.astro';
     align-items: flex-start;
     gap: 14px;
   }
-  .private-input {
-    width: 100%;
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 300;
-    letter-spacing: 0.06em;
-    padding: 13px 16px;
-    background: transparent;
-    border: 1px solid var(--border-default);
-    color: var(--fg-primary);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .private-input::placeholder {
-    color: rgba(255, 255, 255, 0.2);
-  }
-  .private-input:focus {
-    border-color: var(--fg-tertiary);
-  }
   .private-btn {
+    display: inline-block;
     font-family: var(--font-body);
     font-size: 10px;
     font-weight: 600;

@@ -1,8 +1,12 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://mathlacome2018.github.io',
-  base: '/mathlacome',
+  // TODO: once the Cloudflare Pages project exists, update this to its
+  // real domain (the *.pages.dev URL, or your custom domain).
+  site: 'https://mathlacome.pages.dev',
+  output: 'server',
+  adapter: cloudflare(),
 });
