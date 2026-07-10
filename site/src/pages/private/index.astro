@@ -4,8 +4,10 @@ export const prerender = false;
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
+import { isAdminEmail } from '../../lib/supabase-admin';
 
 const user = Astro.locals.user;
+const admin = isAdminEmail(user?.email);
 ---
 
 <BaseLayout title="Private — Mathlacome">
@@ -22,6 +24,7 @@ const user = Astro.locals.user;
     </div>
     <div class="account-bar">
       <span>Signed in as {user?.email}</span>
+      {admin && <a href="/private/admin" class="admin-link">Admin →</a>}
       <form method="POST" action="/api/auth/logout">
         <button type="submit" class="logout-btn">Log out</button>
       </form>
@@ -136,6 +139,19 @@ const user = Astro.locals.user;
     color: var(--fg-secondary);
     border-top: 1px solid var(--border-default);
     padding-top: 20px;
+  }
+  .admin-link {
+    margin-left: auto;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-primary);
+    text-decoration: none;
+  }
+  .admin-link:hover {
+    opacity: 0.7;
   }
   .logout-btn {
     font-family: var(--font-body);

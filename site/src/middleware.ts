@@ -1,7 +1,13 @@
 import { defineMiddleware } from 'astro:middleware';
 import { createSupabaseServerClient } from './lib/supabase';
+import { isAdminEmail } from './lib/supabase-admin';
 
-const PUBLIC_PRIVATE_PATHS = new Set(['/private/login', '/private/signup']);
+const AUTH_PATHS = new Set(['/private/login', '/private/signup']);
+const PENDING_PATH = '/private/pending';
+
+function isApproved(user: { app_metadata?: Record<string, unknown> } | null): boolean {
+  return user?.app_metadata?.approved === true;
+}
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
@@ -17,11 +23,33 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   context.locals.user = user;
 
-  if (!user && !PUBLIC_PRIVATE_PATHS.has(pathname)) {
+  // Not signed in: only the login/signup forms are reachable.
+  if (!user) {
+    if (AUTH_PATHS.has(pathname)) return next();
     return context.redirect(`/private/login?next=${encodeURIComponent(pathname)}`);
   }
 
-  if (user && PUBLIC_PRIVATE_PATHS.has(pathname)) {
+  const admin = isAdminEmail(user.email);
+  const approved = admin || isApproved(user);
+
+  // Signed in: bounce away from the login/signup forms.
+  if (AUTH_PATHS.has(pathname)) {
+    return context.redirect(approved ? '/private' : PENDING_PATH);
+  }
+
+  // Signed in but not yet approved: only the "pending" screen is reachable.
+  if (!approved) {
+    if (pathname === PENDING_PATH) return next();
+    return context.redirect(PENDING_PATH);
+  }
+
+  // Approved (or admin) users don't need the pending screen.
+  if (pathname === PENDING_PATH) {
+    return context.redirect('/private');
+  }
+
+  // The admin area is restricted to the configured admin email.
+  if (pathname.startsWith('/private/admin') && !admin) {
     return context.redirect('/private');
   }
 

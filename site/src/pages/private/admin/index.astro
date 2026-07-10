@@ -1,0 +1,217 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Nav from '../../../components/Nav.astro';
+import Footer from '../../../components/Footer.astro';
+import { createSupabaseAdminClient, isAdminEmail } from '../../../lib/supabase-admin';
+
+const admin = createSupabaseAdminClient();
+const { data, error } = await admin.auth.admin.listUsers({ perPage: 200 });
+
+const users = (data?.users ?? [])
+  .filter((u) => !isAdminEmail(u.email))
+  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+const pending = users.filter((u) => u.app_metadata?.approved !== true);
+const approved = users.filter((u) => u.app_metadata?.approved === true);
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+---
+
+<BaseLayout title="Admin — Mathlacome">
+  <Nav active="private" />
+
+  <div class="page-header">
+    <div class="page-label">02 / Private Admin</div>
+    <h1 class="page-title">Access<br />Requests.</h1>
+  </div>
+
+  <div class="admin-body">
+    {error && <p class="admin-error">Could not load users: {error.message}</p>}
+
+    <section class="admin-section">
+      <h2 class="admin-heading">Pending ({pending.length})</h2>
+      {
+        pending.length === 0 ? (
+          <p class="admin-empty">No pending requests.</p>
+        ) : (
+          <div class="user-list">
+            {pending.map((u) => (
+              <div class="user-row">
+                <div class="user-info">
+                  <span class="user-email">{u.email}</span>
+                  <span class="user-meta">Requested {formatDate(u.created_at)}</span>
+                </div>
+                <div class="user-actions">
+                  <form method="POST" action="/api/admin/approve">
+                    <input type="hidden" name="userId" value={u.id} />
+                    <button type="submit" class="action-btn is-approve">Approve</button>
+                  </form>
+                  <form method="POST" action="/api/admin/deny">
+                    <input type="hidden" name="userId" value={u.id} />
+                    <button type="submit" class="action-btn">Deny</button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <section class="admin-section">
+      <h2 class="admin-heading">Approved ({approved.length})</h2>
+      {
+        approved.length === 0 ? (
+          <p class="admin-empty">No one approved yet.</p>
+        ) : (
+          <div class="user-list">
+            {approved.map((u) => (
+              <div class="user-row">
+                <div class="user-info">
+                  <span class="user-email">{u.email}</span>
+                  <span class="user-meta">Joined {formatDate(u.created_at)}</span>
+                </div>
+                <div class="user-actions">
+                  <form method="POST" action="/api/admin/revoke">
+                    <input type="hidden" name="userId" value={u.id} />
+                    <button type="submit" class="action-btn">Revoke</button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </section>
+  </div>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .page-header {
+    padding: 96px 32px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .page-label {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-label::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--fg-primary);
+  }
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+  }
+
+  .admin-body {
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 48px 32px 96px;
+  }
+  .admin-error {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--fg-primary);
+    border-top: 2px solid var(--fg-primary);
+    padding-top: 12px;
+    margin-bottom: 32px;
+  }
+  .admin-section {
+    margin-bottom: 56px;
+  }
+  .admin-heading {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .admin-empty {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--fg-secondary);
+  }
+  .user-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .user-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border-default);
+  }
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .user-email {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--fg-primary);
+  }
+  .user-meta {
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+  }
+  .user-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .action-btn {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .action-btn:hover {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+  .action-btn.is-approve {
+    color: var(--fg-primary);
+    border-color: var(--fg-primary);
+  }
+</style>
