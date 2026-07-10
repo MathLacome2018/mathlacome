@@ -6,7 +6,7 @@ import cloudflare from '@astrojs/cloudflare';
 export default defineConfig({
   // TODO: once the Cloudflare Pages project exists, update this to its
   // real domain (the *.pages.dev URL, or your custom domain).
-  site: 'https://mathlacome.pages.dev',
+  site: 'site: 'https://mathlacome.mathlacome.workers.dev',
   output: 'server',
   adapter: cloudflare(),
 });
