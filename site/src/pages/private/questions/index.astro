@@ -1,0 +1,529 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Nav from '../../../components/Nav.astro';
+import Footer from '../../../components/Footer.astro';
+import { createSupabaseServerClient } from '../../../lib/supabase';
+import { truncate, type Question } from '../../../lib/questions';
+
+const supabase = createSupabaseServerClient(Astro.request, Astro.cookies);
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+
+const { data, error } = await supabase
+  .from('questions')
+  .select('id, body, author_email, status, answer, tags, like_count, answered_at, created_at')
+  .order('created_at', { ascending: false });
+
+const questions = (data ?? []) as Question[];
+const answered = questions.filter((q) => q.status === 'answered');
+const unanswered = questions.filter((q) => q.status === 'open');
+
+let likedIds: string[] = [];
+if (user && unanswered.length > 0) {
+  const { data: likes } = await supabase
+    .from('question_likes')
+    .select('question_id')
+    .eq('user_id', user.id);
+  likedIds = (likes ?? []).map((l) => l.question_id as string);
+}
+
+const unansweredForClient = unanswered.map((q) => ({
+  id: q.id,
+  body: q.body,
+  likeCount: q.like_count,
+  createdAt: q.created_at,
+  liked: likedIds.includes(q.id),
+}));
+
+const askError = Astro.url.searchParams.get('error');
+---
+
+<BaseLayout title="Your Questions → My Answers — Mathlacome">
+  <Nav active="private" />
+
+  <div class="page-header">
+    <a href="/private" class="back-link">← Private Space</a>
+    <div class="page-label">02 / Private — Q&amp;A</div>
+    <h1 class="page-title">Your Questions<br />→ My Answers.</h1>
+    <p class="intro-text">
+      Ask anything. Other members can like a question to push it up the queue — I answer the most-liked ones in
+      full, here, not in a reply thread.
+    </p>
+  </div>
+
+  <div class="questions-body">
+    {error && <p class="q-error">Could not load questions: {error.message}</p>}
+    {askError && <p class="q-error">{askError}</p>}
+
+    <form method="POST" action="/api/questions/ask" class="ask-form">
+      <textarea name="body" class="ask-input" placeholder="Ask a question" required rows="2" />
+      <button type="submit" class="ask-submit">Ask</button>
+    </form>
+
+    {
+      answered.length > 0 && (
+        <section class="answered-section">
+          <div class="answered-heading">
+            <h2 class="sub-heading">Answered</h2>
+            <div class="carousel-controls">
+              <button class="carousel-btn" id="carousel-prev" aria-label="Scroll left">
+                ←
+              </button>
+              <button class="carousel-btn" id="carousel-next" aria-label="Scroll right">
+                →
+              </button>
+            </div>
+          </div>
+          <div class="carousel" id="answered-carousel">
+            {answered.map((q) => (
+              <a href={`/private/questions/${q.id}`} class="answered-card">
+                <p class="answered-card-body">{truncate(q.body, 110)}</p>
+                {q.tags.length > 0 && (
+                  <div class="card-tags">
+                    {q.tags.map((tag) => (
+                      <span class="card-tag">{tag}</span>
+                    ))}
+                  </div>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <section class="unanswered-section">
+      <div class="unanswered-heading">
+        <h2 class="sub-heading">Unanswered ({unanswered.length})</h2>
+        <div class="sort-tabs">
+          <button class="sort-tab active" data-sort="likes">Most Liked</button>
+          <button class="sort-tab" data-sort="date">Newest</button>
+        </div>
+      </div>
+      <div class="question-list" id="question-list"></div>
+      <p class="q-empty" id="q-empty" hidden>No open questions right now.</p>
+    </section>
+  </div>
+
+  <Footer />
+</BaseLayout>
+
+<script type="application/json" id="questions-data" set:html={JSON.stringify(unansweredForClient)} is:inline />
+
+<style>
+  .page-header {
+    padding: 96px 32px 40px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .back-link {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.12s;
+  }
+  .back-link:hover {
+    color: var(--fg-primary);
+  }
+  .page-label {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-label::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--fg-primary);
+  }
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 5.5vw, 3.75rem);
+    line-height: 0.98;
+    letter-spacing: 0.02em;
+    margin-bottom: 24px;
+  }
+  .intro-text {
+    max-width: 620px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.75;
+    color: var(--fg-secondary);
+    margin-bottom: 36px;
+  }
+
+  .questions-body {
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 40px 32px 96px;
+  }
+  .q-error {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--fg-primary);
+    border-top: 2px solid var(--fg-primary);
+    padding-top: 12px;
+    margin-bottom: 24px;
+  }
+
+  .ask-form {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 56px;
+  }
+  .ask-input {
+    flex: 1;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    padding: 12px 14px;
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--fg-primary);
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+  .ask-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+  }
+  .ask-input:focus {
+    border-color: var(--fg-tertiary);
+  }
+  .ask-submit {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 12px 22px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .ask-submit:hover {
+    opacity: 0.82;
+  }
+
+  .sub-heading {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    letter-spacing: 0.02em;
+    color: var(--fg-primary);
+  }
+
+  .answered-section {
+    margin-bottom: 56px;
+  }
+  .answered-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .carousel-controls {
+    display: flex;
+    gap: 6px;
+  }
+  .carousel-btn {
+    width: 28px;
+    height: 28px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .carousel-btn:hover {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+  .carousel {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding-bottom: 8px;
+  }
+  .carousel::-webkit-scrollbar {
+    height: 4px;
+  }
+  .carousel::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+  }
+  :global(.answered-card) {
+    scroll-snap-align: start;
+    flex: 0 0 240px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 140px;
+    padding: 18px;
+    border: 1px solid var(--border-default);
+    color: inherit;
+    text-decoration: none;
+    transition:
+      background 0.15s,
+      color 0.15s,
+      border-color 0.15s;
+  }
+  :global(.answered-card:hover) {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+  }
+  :global(.answered-card-body) {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+  }
+  :global(.card-tags) {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  :global(.card-tag) {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  :global(.card-tag)::before {
+    content: '#';
+  }
+
+  .unanswered-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-default);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .sort-tabs {
+    display: flex;
+  }
+  .sort-tab {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    border-right: none;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .sort-tab:last-child {
+    border-right: 1px solid var(--border-default);
+  }
+  .sort-tab.active,
+  .sort-tab:hover {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+
+  .question-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .q-empty {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--fg-secondary);
+    padding: 24px 0;
+  }
+
+  :global(.question-entry) {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 0;
+    border-top: 1px solid var(--border-default);
+  }
+  :global(.question-body) {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--fg-secondary);
+    flex: 1;
+  }
+  :global(.question-date) {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+    margin-top: 6px;
+  }
+  :global(.like-form) {
+    flex-shrink: 0;
+  }
+  :global(.like-btn) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  :global(.like-btn:hover) {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+  :global(.like-btn.is-liked) {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+</style>
+
+<script>
+  interface QuestionRow {
+    id: string;
+    body: string;
+    likeCount: number;
+    createdAt: string;
+    liked: boolean;
+  }
+
+  const dataEl = document.getElementById('questions-data');
+  const QUESTIONS: QuestionRow[] = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+
+  let sortMode: 'likes' | 'date' = 'likes';
+
+  const listEl = document.getElementById('question-list');
+  const emptyEl = document.getElementById('q-empty');
+
+  function sorted(): QuestionRow[] {
+    const list = [...QUESTIONS];
+    if (sortMode === 'date') {
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else {
+      list.sort((a, b) => b.likeCount - a.likeCount);
+    }
+    return list;
+  }
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function buildEntry(q: QuestionRow): HTMLElement {
+    const entry = document.createElement('div');
+    entry.className = 'question-entry';
+
+    const body = document.createElement('div');
+    body.className = 'question-body';
+    body.textContent = q.body;
+    const date = document.createElement('span');
+    date.className = 'question-date';
+    date.textContent = `Asked ${formatDate(q.createdAt)}`;
+    body.append(date);
+
+    const form = document.createElement('form');
+    form.className = 'like-form';
+    form.method = 'POST';
+    form.action = '/api/questions/like';
+
+    const idInput = document.createElement('input');
+    idInput.type = 'hidden';
+    idInput.name = 'questionId';
+    idInput.value = q.id;
+
+    const nextInput = document.createElement('input');
+    nextInput.type = 'hidden';
+    nextInput.name = 'next';
+    nextInput.value = '/private/questions';
+
+    const btn = document.createElement('button');
+    btn.type = 'submit';
+    btn.className = 'like-btn' + (q.liked ? ' is-liked' : '');
+    btn.textContent = `${q.liked ? 'Liked' : 'Like'} · ${q.likeCount}`;
+
+    form.append(idInput, nextInput, btn);
+    entry.append(body, form);
+    return entry;
+  }
+
+  function render() {
+    if (!listEl || !emptyEl) return;
+    const list = sorted();
+    listEl.replaceChildren(...list.map(buildEntry));
+    emptyEl.hidden = list.length > 0;
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.sort-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      sortMode = (btn.dataset.sort as 'likes' | 'date') ?? 'likes';
+      document.querySelectorAll('.sort-tab').forEach((t) => t.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    });
+  });
+
+  const carousel = document.getElementById('answered-carousel');
+  document.getElementById('carousel-prev')?.addEventListener('click', () => {
+    carousel?.scrollBy({ left: -260, behavior: 'smooth' });
+  });
+  document.getElementById('carousel-next')?.addEventListener('click', () => {
+    carousel?.scrollBy({ left: 260, behavior: 'smooth' });
+  });
+
+  render();
+</script>

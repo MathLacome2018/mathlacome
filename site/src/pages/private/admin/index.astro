@@ -16,6 +16,14 @@ const users = (data?.users ?? [])
 const pending = users.filter((u) => u.app_metadata?.approved !== true);
 const approved = users.filter((u) => u.app_metadata?.approved === true);
 
+const { data: openQuestionsData, error: questionsError } = await admin
+  .from('questions')
+  .select('id, body, author_email, like_count, created_at')
+  .eq('status', 'open')
+  .order('like_count', { ascending: false });
+
+const openQuestions = openQuestionsData ?? [];
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
@@ -81,6 +89,35 @@ function formatDate(iso: string) {
                     <button type="submit" class="action-btn">Revoke</button>
                   </form>
                 </div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <section class="admin-section">
+      <h2 class="admin-heading">Questions to Answer ({openQuestions.length})</h2>
+      {questionsError && <p class="admin-error">Could not load questions: {questionsError.message}</p>}
+      {
+        openQuestions.length === 0 ? (
+          <p class="admin-empty">No open questions right now.</p>
+        ) : (
+          <div class="question-list">
+            {openQuestions.map((q) => (
+              <div class="question-row">
+                <div class="question-info">
+                  <p class="question-body">{q.body}</p>
+                  <span class="question-meta">
+                    {q.like_count} likes · asked by {q.author_email} on {formatDate(q.created_at)}
+                  </span>
+                </div>
+                <form method="POST" action="/api/admin/answer-question" class="answer-form">
+                  <input type="hidden" name="questionId" value={q.id} />
+                  <textarea name="answer" class="answer-input" placeholder="Write your full answer" required rows="4" />
+                  <input type="text" name="tags" class="tags-input" placeholder="Tags, comma separated (e.g. workflow, in-season)" />
+                  <button type="submit" class="action-btn is-approve">Publish Answer</button>
+                </form>
               </div>
             ))}
           </div>
@@ -213,5 +250,63 @@ function formatDate(iso: string) {
   .action-btn.is-approve {
     color: var(--fg-primary);
     border-color: var(--fg-primary);
+  }
+
+  .question-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .question-row {
+    padding: 20px 0;
+    border-top: 1px solid var(--border-default);
+  }
+  .question-info {
+    margin-bottom: 14px;
+  }
+  .question-body {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--fg-primary);
+    margin-bottom: 6px;
+  }
+  .question-meta {
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+  }
+  .answer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 560px;
+  }
+  .answer-input,
+  .tags-input {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    padding: 10px 12px;
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--fg-primary);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .answer-input {
+    resize: vertical;
+  }
+  .answer-input::placeholder,
+  .tags-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+  }
+  .answer-input:focus,
+  .tags-input:focus {
+    border-color: var(--fg-tertiary);
   }
 </style>

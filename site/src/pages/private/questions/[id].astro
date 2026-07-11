@@ -1,0 +1,193 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Nav from '../../../components/Nav.astro';
+import Footer from '../../../components/Footer.astro';
+import { createSupabaseServerClient } from '../../../lib/supabase';
+import type { Question } from '../../../lib/questions';
+
+const { id } = Astro.params;
+const supabase = createSupabaseServerClient(Astro.request, Astro.cookies);
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+
+const { data } = await supabase
+  .from('questions')
+  .select('id, body, author_email, status, answer, tags, like_count, answered_at, created_at')
+  .eq('id', id)
+  .single<Question>();
+
+if (!data || data.status !== 'answered') {
+  return Astro.redirect('/private/questions');
+}
+
+const question = data;
+
+let liked = false;
+if (user) {
+  const { data: like } = await supabase
+    .from('question_likes')
+    .select('id')
+    .eq('question_id', question.id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  liked = !!like;
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+const answerParagraphs = (question.answer ?? '')
+  .split(/\n{2,}/)
+  .map((p) => p.trim())
+  .filter(Boolean);
+---
+
+<BaseLayout title="Your Questions → My Answers — Mathlacome">
+  <Nav active="private" />
+
+  <div class="page-header">
+    <a href="/private/questions" class="back-link">← Your Questions → My Answers</a>
+
+    {
+      question.tags.length > 0 && (
+        <div class="entry-tags">
+          {question.tags.map((tag) => (
+            <span class="entry-tag">{tag}</span>
+          ))}
+        </div>
+      )
+    }
+
+    <h1 class="question-title">{question.body}</h1>
+
+    <div class="entry-meta">
+      <span>Answered {formatDate(question.answered_at ?? question.created_at)}</span>
+    </div>
+
+    <form method="POST" action="/api/questions/like" class="like-form">
+      <input type="hidden" name="questionId" value={question.id} />
+      <input type="hidden" name="next" value={`/private/questions/${question.id}`} />
+      <button type="submit" class={`like-btn${liked ? ' is-liked' : ''}`}>
+        {liked ? 'Liked' : 'Like'} · {question.like_count}
+      </button>
+    </form>
+  </div>
+
+  <article class="answer-body">
+    <span class="answer-label">My Answer</span>
+    {answerParagraphs.map((p) => <p class="answer-text">{p}</p>)}
+  </article>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .page-header {
+    padding: 96px 32px 40px;
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .back-link {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    text-decoration: none;
+    margin-bottom: 28px;
+    transition: color 0.12s;
+  }
+  .back-link:hover {
+    color: var(--fg-primary);
+  }
+  .entry-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .entry-tag {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+  }
+  .entry-tag::before {
+    content: '#';
+  }
+  .question-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4.5vw, 2.75rem);
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    margin-bottom: 16px;
+  }
+  .entry-meta {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+    margin-bottom: 20px;
+  }
+  .like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .like-btn:hover,
+  .like-btn.is-liked {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+
+  .answer-body {
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 48px 32px 96px;
+  }
+  .answer-label {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .answer-text {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.8;
+    color: var(--fg-secondary);
+    margin-bottom: 20px;
+  }
+</style>
