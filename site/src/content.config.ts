@@ -15,4 +15,19 @@ const publications = defineCollection({
   }),
 });
 
-export const collections = { publications };
+const experiments = defineCollection({
+  loader: glob({ pattern: '**/*.mdx', base: './src/content/experiments' }),
+  schema: z.object({
+    title: z.string(),
+    date: z.coerce.date(),
+    status: z.enum(['running', 'done', 'abandoned']),
+    hypothesis: z.string(),
+    // One-sentence finding, shown above the fold. Often absent while a
+    // "running" experiment hasn't concluded yet.
+    result: z.string().optional(),
+    tags: z.array(z.string()).default([]),
+    updated: z.coerce.date().optional(),
+  }),
+});
+
+export const collections = { publications, experiments };
