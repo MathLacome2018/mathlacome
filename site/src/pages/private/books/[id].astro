@@ -1,0 +1,335 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Nav from '../../../components/Nav.astro';
+import Footer from '../../../components/Footer.astro';
+import { createSupabaseServerClient } from '../../../lib/supabase';
+import { paragraphs, type Book, type BookComment } from '../../../lib/books';
+
+const { id } = Astro.params;
+const supabase = createSupabaseServerClient(Astro.request, Astro.cookies);
+
+const { data: book } = await supabase.from('books').select('*').eq('id', id).single<Book>();
+
+if (!book) {
+  return Astro.redirect('/private/books');
+}
+
+const { data: commentsData } = await supabase
+  .from('book_comments')
+  .select('id, user_email, body, created_at')
+  .eq('book_id', id)
+  .order('created_at', { ascending: true });
+
+const comments = (commentsData ?? []) as BookComment[];
+const commentError = Astro.url.searchParams.get('error');
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function commenterName(email: string) {
+  return email.split('@')[0];
+}
+---
+
+<BaseLayout title={`${book.title} — Mathlacome`}>
+  <Nav active="private" />
+
+  <div class="page-header">
+    <a href="/private/books" class="back-link">← Books I Read</a>
+    <div class="book-header">
+      <div class="book-cover">
+        {
+          book.cover_url ? (
+            <img src={book.cover_url} alt={`${book.title} cover`} />
+          ) : (
+            <div class="book-cover-placeholder">{book.title.charAt(0).toUpperCase()}</div>
+          )
+        }
+      </div>
+      <div class="book-meta">
+        <h1 class="book-title">{book.title}</h1>
+        <p class="book-author">{book.author}</p>
+        <p class="book-added">Added {formatDate(book.added_at)}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="book-body">
+    <section class="book-section">
+      <h2 class="sub-heading"><span class="sub-num">01</span> Lessons Learned</h2>
+      {paragraphs(book.lessons).map((p) => <p class="sub-text">{p}</p>)}
+      {paragraphs(book.lessons).length === 0 && <p class="sub-empty">Not written up yet.</p>}
+    </section>
+
+    <section class="book-section">
+      <h2 class="sub-heading"><span class="sub-num">02</span> Overall Summary</h2>
+      {paragraphs(book.summary).map((p) => <p class="sub-text">{p}</p>)}
+      {paragraphs(book.summary).length === 0 && <p class="sub-empty">Not written up yet.</p>}
+    </section>
+
+    <section class="book-section">
+      <h2 class="sub-heading"><span class="sub-num">03</span> Book Snippets</h2>
+      {
+        paragraphs(book.snippets).length === 0 ? (
+          <p class="sub-empty">No snippets saved yet.</p>
+        ) : (
+          paragraphs(book.snippets).map((s) => <blockquote class="snippet">{s}</blockquote>)
+        )
+      }
+    </section>
+
+    <section class="book-section comments-section">
+      <h2 class="sub-heading"><span class="sub-num">·</span> Comments ({comments.length})</h2>
+
+      {
+        comments.length === 0 ? (
+          <p class="sub-empty">No comments yet.</p>
+        ) : (
+          <div class="comment-list">
+            {comments.map((c) => (
+              <div class="comment">
+                <div class="comment-meta">
+                  <span class="comment-author">{commenterName(c.user_email)}</span>
+                  <span class="comment-date">{formatDate(c.created_at)}</span>
+                </div>
+                <p class="comment-body">{c.body}</p>
+              </div>
+            ))}
+          </div>
+        )
+      }
+
+      <form method="POST" action="/api/books/comment" class="comment-form">
+        <input type="hidden" name="bookId" value={book.id} />
+        {commentError && <p class="comment-error">{commentError}</p>}
+        <textarea name="body" class="comment-input" placeholder="Add a comment" required rows="3" />
+        <button type="submit" class="comment-submit">Post Comment</button>
+      </form>
+    </section>
+  </div>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .page-header {
+    padding: 96px 32px 48px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .back-link {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    text-decoration: none;
+    margin-bottom: 32px;
+    transition: color 0.12s;
+  }
+  .back-link:hover {
+    color: var(--fg-primary);
+  }
+  .book-header {
+    display: flex;
+    gap: 32px;
+    align-items: flex-end;
+  }
+  .book-cover {
+    width: 140px;
+    aspect-ratio: 2 / 3;
+    border: 1px solid var(--border-default);
+    overflow: hidden;
+    background: var(--bg-muted);
+    flex-shrink: 0;
+  }
+  .book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .book-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 3rem;
+    color: var(--fg-tertiary);
+  }
+  .book-meta {
+    padding-bottom: 8px;
+  }
+  .book-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+  .book-author {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--fg-secondary);
+    margin-bottom: 4px;
+  }
+  .book-added {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+  }
+
+  .book-body {
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 56px 32px 96px;
+  }
+  .book-section {
+    margin-bottom: 56px;
+  }
+  .sub-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    letter-spacing: 0.02em;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .sub-num {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--fg-tertiary);
+  }
+  .sub-text {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.75;
+    color: var(--fg-secondary);
+    margin-bottom: 16px;
+    max-width: 680px;
+  }
+  .sub-empty {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--fg-tertiary);
+    font-style: italic;
+  }
+  .snippet {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    color: var(--fg-primary);
+    border-top: 2px solid var(--fg-primary);
+    padding-top: 16px;
+    margin-bottom: 28px;
+    max-width: 680px;
+  }
+
+  .comment-list {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 32px;
+  }
+  .comment {
+    padding: 16px 0;
+    border-top: 1px solid var(--border-default);
+  }
+  .comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .comment-author {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-primary);
+  }
+  .comment-date {
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--fg-tertiary);
+  }
+  .comment-body {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.65;
+    color: var(--fg-secondary);
+    max-width: 640px;
+  }
+
+  .comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 640px;
+  }
+  .comment-error {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--fg-primary);
+    border-top: 2px solid var(--fg-primary);
+    padding-top: 10px;
+  }
+  .comment-input {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    padding: 12px 14px;
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--fg-primary);
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+  .comment-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+  }
+  .comment-input:focus {
+    border-color: var(--fg-tertiary);
+  }
+  .comment-submit {
+    align-self: flex-start;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .comment-submit:hover {
+    opacity: 0.82;
+  }
+</style>

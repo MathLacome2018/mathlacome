@@ -1,0 +1,343 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Nav from '../../../components/Nav.astro';
+import Footer from '../../../components/Footer.astro';
+import { createSupabaseServerClient } from '../../../lib/supabase';
+import type { Book } from '../../../lib/books';
+
+const supabase = createSupabaseServerClient(Astro.request, Astro.cookies);
+const { data, error } = await supabase
+  .from('books')
+  .select('id, title, author, cover_url, added_at')
+  .order('added_at', { ascending: false });
+
+const books = (data ?? []) as Pick<Book, 'id' | 'title' | 'author' | 'cover_url' | 'added_at'>[];
+---
+
+<BaseLayout title="Books I Read — Mathlacome">
+  <Nav active="private" />
+
+  <div class="page-header">
+    <a href="/private" class="back-link">← Private Space</a>
+    <div class="page-label">02 / Private — Books</div>
+    <h1 class="page-title">Books<br />I Read.</h1>
+  </div>
+
+  <div class="books-body">
+    {error && <p class="books-error">Could not load books: {error.message}</p>}
+
+    <div class="books-toolbar">
+      <div class="sort-tabs">
+        <button class="sort-tab active" data-sort="added">Recently Added</button>
+        <button class="sort-tab" data-sort="alpha">A–Z</button>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon" aria-hidden="true"></span>
+        <input type="search" class="search-input" id="book-search" placeholder="Search title or author" />
+      </div>
+    </div>
+
+    <div class="book-grid" id="book-grid"></div>
+    <p class="book-empty" id="book-empty" hidden>No books match your search.</p>
+  </div>
+
+  <Footer />
+</BaseLayout>
+
+<script type="application/json" id="books-data" set:html={JSON.stringify(books)} is:inline />
+
+<style>
+  .page-header {
+    padding: 96px 32px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .back-link {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.12s;
+  }
+  .back-link:hover {
+    color: var(--fg-primary);
+  }
+  .page-label {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-label::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--fg-primary);
+  }
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    margin-bottom: 32px;
+  }
+
+  .books-body {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 40px 32px 96px;
+  }
+  .books-error {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--fg-primary);
+    border-top: 2px solid var(--fg-primary);
+    padding-top: 12px;
+    margin-bottom: 32px;
+  }
+
+  .books-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  .sort-tabs {
+    display: flex;
+  }
+  .sort-tab {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    border-right: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .sort-tab:last-child {
+    border-right: 1px solid var(--border-default);
+  }
+  .sort-tab.active,
+  .sort-tab:hover {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+  .search-wrap {
+    position: relative;
+    width: 260px;
+    max-width: 100%;
+  }
+  .search-icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-65%);
+    width: 9px;
+    height: 9px;
+    border: 1.5px solid var(--fg-secondary);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .search-icon::after {
+    content: '';
+    position: absolute;
+    width: 1.5px;
+    height: 7px;
+    background: var(--fg-secondary);
+    bottom: -6px;
+    right: -1.5px;
+    transform: rotate(45deg);
+  }
+  .search-input {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    padding: 9px 12px 9px 32px;
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--fg-primary);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+  }
+  .search-input:focus {
+    border-color: var(--fg-tertiary);
+  }
+
+  .book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 32px 24px;
+  }
+  .book-empty {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--fg-secondary);
+    padding: 24px 0;
+  }
+
+  :global(.book-card) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: inherit;
+    text-decoration: none;
+  }
+  :global(.book-cover) {
+    aspect-ratio: 2 / 3;
+    border: 1px solid var(--border-default);
+    overflow: hidden;
+    background: var(--bg-muted);
+    transition: border-color 0.15s;
+  }
+  :global(.book-card:hover .book-cover) {
+    border-color: var(--fg-primary);
+  }
+  :global(.book-cover img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  :global(.book-cover-placeholder) {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--fg-tertiary);
+  }
+  :global(.book-title) {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    line-height: 1.05;
+    letter-spacing: 0.02em;
+    color: var(--fg-primary);
+  }
+  :global(.book-author) {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--fg-secondary);
+    letter-spacing: 0.02em;
+  }
+</style>
+
+<script>
+  interface BookRow {
+    id: string;
+    title: string;
+    author: string;
+    cover_url: string | null;
+    added_at: string;
+  }
+
+  const dataEl = document.getElementById('books-data');
+  const BOOKS: BookRow[] = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+
+  let sortMode: 'added' | 'alpha' = 'added';
+  let query = '';
+
+  const gridEl = document.getElementById('book-grid');
+  const emptyEl = document.getElementById('book-empty');
+
+  function visibleBooks(): BookRow[] {
+    const q = query.trim().toLowerCase();
+    let list = BOOKS.filter(
+      (b) => !q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q),
+    );
+    list = [...list].sort((a, b) => {
+      if (sortMode === 'alpha') return a.title.localeCompare(b.title);
+      return new Date(b.added_at).getTime() - new Date(a.added_at).getTime();
+    });
+    return list;
+  }
+
+  function buildCard(book: BookRow): HTMLElement {
+    const card = document.createElement('a');
+    card.className = 'book-card';
+    card.href = `/private/books/${book.id}`;
+
+    const cover = document.createElement('div');
+    cover.className = 'book-cover';
+    if (book.cover_url) {
+      const img = document.createElement('img');
+      img.src = book.cover_url;
+      img.alt = `${book.title} cover`;
+      img.loading = 'lazy';
+      cover.append(img);
+    } else {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'book-cover-placeholder';
+      placeholder.textContent = book.title.charAt(0).toUpperCase();
+      cover.append(placeholder);
+    }
+
+    const title = document.createElement('div');
+    title.className = 'book-title';
+    title.textContent = book.title;
+
+    const author = document.createElement('div');
+    author.className = 'book-author';
+    author.textContent = book.author;
+
+    card.append(cover, title, author);
+    return card;
+  }
+
+  function render() {
+    if (!gridEl || !emptyEl) return;
+    const list = visibleBooks();
+    gridEl.replaceChildren(...list.map(buildCard));
+    emptyEl.hidden = list.length > 0;
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.sort-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      sortMode = (btn.dataset.sort as 'added' | 'alpha') ?? 'added';
+      document.querySelectorAll('.sort-tab').forEach((t) => t.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    });
+  });
+
+  const searchInput = document.getElementById('book-search') as HTMLInputElement | null;
+  searchInput?.addEventListener('input', () => {
+    query = searchInput.value;
+    render();
+  });
+
+  render();
+</script>
