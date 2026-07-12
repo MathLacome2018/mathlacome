@@ -2,7 +2,12 @@ import { defineMiddleware } from 'astro:middleware';
 import { createSupabaseServerClient } from './lib/supabase';
 import { isAdminEmail } from './lib/supabase-admin';
 
-const AUTH_PATHS = new Set(['/private/login', '/private/signup']);
+// Reachable only while signed out; redirect away from these once logged in.
+const LOGGED_OUT_ONLY_PATHS = new Set(['/private/login', '/private/signup', '/private/forgot-password']);
+// Reachable regardless of auth state: the recovery link logs the user in
+// via a one-time token, so this page must stay visible right after that
+// happens too, not bounce them onward like login/signup would.
+const ALWAYS_ACCESSIBLE_PATHS = new Set(['/private/reset-password']);
 const PENDING_PATH = '/private/pending';
 
 function isApproved(user: { app_metadata?: Record<string, unknown> } | null): boolean {
@@ -23,17 +28,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   context.locals.user = user;
 
-  // Not signed in: only the login/signup forms are reachable.
+  if (ALWAYS_ACCESSIBLE_PATHS.has(pathname)) {
+    return next();
+  }
+
+  // Not signed in: only the login/signup/forgot-password forms are reachable.
   if (!user) {
-    if (AUTH_PATHS.has(pathname)) return next();
+    if (LOGGED_OUT_ONLY_PATHS.has(pathname)) return next();
     return context.redirect(`/private/login?next=${encodeURIComponent(pathname)}`);
   }
 
   const admin = isAdminEmail(user.email);
   const approved = admin || isApproved(user);
 
-  // Signed in: bounce away from the login/signup forms.
-  if (AUTH_PATHS.has(pathname)) {
+  // Signed in: bounce away from the login/signup/forgot-password forms.
+  if (LOGGED_OUT_ONLY_PATHS.has(pathname)) {
     return context.redirect(approved ? '/private' : PENDING_PATH);
   }
 
