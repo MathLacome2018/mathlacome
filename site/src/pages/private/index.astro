@@ -24,6 +24,7 @@ const admin = isAdminEmail(user?.email);
     </div>
     <div class="account-bar">
       <span>Signed in as {user?.email}</span>
+      <a href="/private/invites" class="invites-link">Your invites →</a>
       {admin && <a href="/private/admin" class="admin-link">Admin →</a>}
       <form method="POST" action="/api/auth/logout">
         <button type="submit" class="logout-btn">Log out</button>
@@ -140,8 +141,20 @@ const admin = isAdminEmail(user?.email);
     border-top: 1px solid var(--border-default);
     padding-top: 20px;
   }
-  .admin-link {
+  .invites-link {
     margin-left: auto;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-primary);
+    text-decoration: none;
+  }
+  .invites-link:hover {
+    opacity: 0.7;
+  }
+  .admin-link {
     font-family: var(--font-body);
     font-size: 10px;
     font-weight: 600;

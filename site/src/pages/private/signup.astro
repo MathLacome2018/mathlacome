@@ -7,6 +7,7 @@ import Footer from '../../components/Footer.astro';
 
 const error = Astro.url.searchParams.get('error');
 const email = Astro.url.searchParams.get('email') ?? '';
+const invite = (Astro.url.searchParams.get('invite') ?? '').toUpperCase();
 ---
 
 <BaseLayout title="Create Account — Mathlacome">
@@ -18,9 +19,27 @@ const email = Astro.url.searchParams.get('email') ?? '';
       <h1 class="page-title">Create<br />Account.</h1>
     </div>
 
+    <p class="auth-intro">
+      This space is invite-only — you need a code from a current member to register. Everyone joins by word of mouth.
+    </p>
+
     <form class="auth-form" method="POST" action="/api/auth/signup">
       {error && <p class="auth-message is-error">{error}</p>}
 
+      <label class="auth-field">
+        <span>Invite Code</span>
+        <input
+          type="text"
+          name="invite"
+          required
+          value={invite}
+          placeholder="e.g. X8K2ABCD"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          class="invite-input"
+        />
+      </label>
       <label class="auth-field">
         <span>Email</span>
         <input type="email" name="email" required autocomplete="email" value={email} />
@@ -77,10 +96,23 @@ const email = Astro.url.searchParams.get('email') ?? '';
     line-height: 0.95;
     letter-spacing: 0.02em;
   }
+  .auth-intro {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--fg-secondary);
+    margin-bottom: 32px;
+  }
   .auth-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
+  }
+  .invite-input {
+    text-transform: uppercase;
+    letter-spacing: 0.12em !important;
+    font-family: var(--font-mono) !important;
   }
   .auth-message {
     font-family: var(--font-body);

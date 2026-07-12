@@ -1,0 +1,265 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Nav from '../../../components/Nav.astro';
+import Footer from '../../../components/Footer.astro';
+import { createSupabaseServerClient } from '../../../lib/supabase';
+import { isAdminEmail } from '../../../lib/supabase-admin';
+import type { Invite } from '../../../lib/invites';
+
+const user = Astro.locals.user;
+const admin = isAdminEmail(user?.email);
+const vetted = admin || user?.app_metadata?.vetted === true;
+
+const supabase = createSupabaseServerClient(Astro.request, Astro.cookies);
+const { data } = await supabase
+  .from('invites')
+  .select('*')
+  .eq('created_by', user?.id ?? '')
+  .eq('revoked', false)
+  .order('created_at', { ascending: true });
+
+const invites = (data ?? []) as Invite[];
+const origin = Astro.url.origin;
+
+function inviteLink(code: string) {
+  return `${origin}/private/signup?invite=${code}`;
+}
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+---
+
+<BaseLayout title="Your Invites — Mathlacome">
+  <Nav active="private" />
+
+  <div class="page-header">
+    <a href="/private" class="back-link">← Private Space</a>
+    <div class="page-label">02 / Private — Invites</div>
+    <h1 class="page-title">Your<br />Invites.</h1>
+    <p class="intro-text">
+      This place grows by word of mouth. You have {invites.length} invite{invites.length === 1 ? '' : 's'} to give — that's
+      it, so choose carefully. Share the link, or just tell someone the code.
+    </p>
+  </div>
+
+  <div class="invites-body">
+    {
+      !vetted && (
+        <p class="locked-note">
+          Your invites are locked for now. Once Mathieu has welcomed you in, they'll unlock here and you can start
+          bringing people.
+        </p>
+      )
+    }
+
+    <div class="invite-cards">
+      {
+        invites.map((inv, i) => {
+          const used = !!inv.redeemed_by;
+          return (
+            <div class:list={['invite-card', { 'is-used': used, 'is-locked': !vetted }]}>
+              <div class="invite-card-head">
+                <span class="invite-index">Invite {i + 1}</span>
+                <span class="invite-status">
+                  {!vetted ? 'Locked' : used ? 'Redeemed' : 'Available'}
+                </span>
+              </div>
+              <div class="invite-code">{inv.code}</div>
+              {
+                used ? (
+                  <p class="invite-used-by">
+                    Used by {inv.redeemed_by_email} · {inv.redeemed_at && formatDate(inv.redeemed_at)}
+                  </p>
+                ) : vetted ? (
+                  <div class="invite-actions">
+                    <button class="copy-btn" data-copy={inv.code}>Copy code</button>
+                    <button class="copy-btn" data-copy={inviteLink(inv.code)}>Copy link</button>
+                  </div>
+                ) : (
+                  <p class="invite-used-by">Unlocks once you're welcomed in.</p>
+                )
+              }
+            </div>
+          );
+        })
+      }
+    </div>
+  </div>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .page-header {
+    padding: 96px 32px 40px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .back-link {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.12s;
+  }
+  .back-link:hover {
+    color: var(--fg-primary);
+  }
+  .page-label {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-label::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--fg-primary);
+  }
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    margin-bottom: 24px;
+  }
+  .intro-text {
+    max-width: 600px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.75;
+    color: var(--fg-secondary);
+    margin-bottom: 36px;
+  }
+
+  .invites-body {
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 40px 32px 96px;
+  }
+  .locked-note {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--fg-secondary);
+    border-top: 2px solid var(--fg-primary);
+    padding-top: 14px;
+    margin-bottom: 36px;
+  }
+
+  .invite-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+  .invite-card {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 24px;
+    border: 1px solid var(--border-default);
+  }
+  .invite-card.is-used {
+    opacity: 0.55;
+  }
+  .invite-card.is-locked {
+    opacity: 0.5;
+  }
+  .invite-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .invite-index {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+  }
+  .invite-status {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+    border: 1px solid var(--border-default);
+    padding: 3px 8px;
+  }
+  .invite-code {
+    font-family: var(--font-mono);
+    font-size: 1.75rem;
+    letter-spacing: 0.18em;
+    color: var(--fg-primary);
+  }
+  .invite-used-by {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    color: var(--fg-secondary);
+  }
+  .invite-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .copy-btn {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .copy-btn:hover {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const value = btn.dataset.copy ?? '';
+      try {
+        await navigator.clipboard.writeText(value);
+        const original = btn.textContent;
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => {
+          btn.textContent = original;
+        }, 1400);
+      } catch {
+        // Clipboard blocked (e.g. insecure context) -- select-and-copy fallback.
+        window.prompt('Copy this:', value);
+      }
+    });
+  });
+</script>

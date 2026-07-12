@@ -4,28 +4,93 @@ export const prerender = false;
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Nav from '../../../components/Nav.astro';
 import Footer from '../../../components/Footer.astro';
+import { createSupabaseServerClient } from '../../../lib/supabase';
 import { createSupabaseAdminClient, isAdminEmail } from '../../../lib/supabase-admin';
+import type { Invite } from '../../../lib/invites';
+
+const server = createSupabaseServerClient(Astro.request, Astro.cookies);
+const {
+  data: { user: me },
+} = await server.auth.getUser();
 
 const admin = createSupabaseAdminClient();
-const { data, error } = await admin.auth.admin.listUsers({ perPage: 200 });
+const { data: usersData, error } = await admin.auth.admin.listUsers({ perPage: 500 });
+const allUsers = usersData?.users ?? [];
 
-const users = (data?.users ?? [])
+const members = allUsers
   .filter((u) => !isAdminEmail(u.email))
   .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-const pending = users.filter((u) => u.app_metadata?.approved !== true);
-const approved = users.filter((u) => u.app_metadata?.approved === true);
+const awaitingVetting = members.filter((u) => u.app_metadata?.vetted !== true);
+const vettedMembers = members.filter((u) => u.app_metadata?.vetted === true);
 
+const { data: invitesData } = await admin
+  .from('invites')
+  .select('*')
+  .order('created_at', { ascending: true });
+const invites = (invitesData ?? []) as Invite[];
+
+// --- Invite usage per member -------------------------------------------------
+const usageByCreator = new Map<string, { total: number; used: number }>();
+for (const inv of invites) {
+  if (inv.revoked || !inv.created_by) continue;
+  const u = usageByCreator.get(inv.created_by) ?? { total: 0, used: 0 };
+  u.total += 1;
+  if (inv.redeemed_by) u.used += 1;
+  usageByCreator.set(inv.created_by, u);
+}
+
+// --- Referral tree (pre-order flatten with depth) ----------------------------
+const emailById = new Map(allUsers.map((u) => [u.id, u.email ?? '(no email)']));
+const parentOf = new Map<string, string>();
+for (const inv of invites) {
+  if (inv.redeemed_by && inv.created_by) parentOf.set(inv.redeemed_by, inv.created_by);
+}
+const childrenOf = new Map<string, string[]>();
+for (const [child, parent] of parentOf) {
+  const arr = childrenOf.get(parent) ?? [];
+  arr.push(child);
+  childrenOf.set(parent, arr);
+}
+const roots = allUsers.map((u) => u.id).filter((id) => !parentOf.has(id));
+
+interface TreeRow {
+  id: string;
+  email: string;
+  depth: number;
+  childCount: number;
+}
+const treeRows: TreeRow[] = [];
+function walk(id: string, depth: number) {
+  const kids = (childrenOf.get(id) ?? []).sort((a, b) =>
+    (emailById.get(a) ?? '').localeCompare(emailById.get(b) ?? ''),
+  );
+  treeRows.push({ id, email: emailById.get(id) ?? '(removed)', depth, childCount: kids.length });
+  for (const kid of kids) walk(kid, depth + 1);
+}
+roots
+  .sort((a, b) => (emailById.get(a) ?? '').localeCompare(emailById.get(b) ?? ''))
+  .forEach((r) => walk(r, 0));
+
+// --- Admin's own available seed codes ---------------------------------------
+const origin = Astro.url.origin;
+const seedCodes = invites.filter(
+  (i) => i.created_by === me?.id && !i.redeemed_by && !i.revoked && i.active,
+);
+function inviteLink(code: string) {
+  return `${origin}/private/signup?invite=${code}`;
+}
+
+// --- Questions ---------------------------------------------------------------
 const { data: openQuestionsData, error: questionsError } = await admin
   .from('questions')
   .select('id, body, author_email, like_count, created_at')
   .eq('status', 'open')
   .order('like_count', { ascending: false });
-
 const openQuestions = openQuestionsData ?? [];
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 ---
 
@@ -33,34 +98,65 @@ function formatDate(iso: string) {
   <Nav active="private" />
 
   <div class="page-header">
+    <a href="/private" class="back-link">← Private Space</a>
     <div class="page-label">02 / Private Admin</div>
-    <h1 class="page-title">Access<br />Requests.</h1>
+    <h1 class="page-title">Members<br />&amp; Invites.</h1>
   </div>
 
   <div class="admin-body">
     {error && <p class="admin-error">Could not load users: {error.message}</p>}
 
     <section class="admin-section">
-      <h2 class="admin-heading">Pending ({pending.length})</h2>
+      <h2 class="admin-heading">Seed Invites</h2>
+      <p class="admin-note">
+        Mint codes to bring in the first people — these are yours, unlimited, and active immediately. Everyone they
+        bring in is capped at 2.
+      </p>
+      <form method="POST" action="/api/admin/mint-invite" class="mint-form">
+        <input type="number" name="count" value="2" min="1" max="10" class="mint-count" />
+        <button type="submit" class="action-btn is-approve">Mint seed codes</button>
+      </form>
       {
-        pending.length === 0 ? (
-          <p class="admin-empty">No pending requests.</p>
+        seedCodes.length > 0 && (
+          <div class="seed-list">
+            {seedCodes.map((c) => (
+              <div class="seed-row">
+                <span class="seed-code">{c.code}</span>
+                <div class="seed-actions">
+                  <button class="copy-btn" data-copy={c.code}>Copy code</button>
+                  <button class="copy-btn" data-copy={inviteLink(c.code)}>Copy link</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <section class="admin-section">
+      <h2 class="admin-heading">Awaiting Vetting ({awaitingVetting.length})</h2>
+      <p class="admin-note">
+        These members are already in and can browse, but their own invites stay locked until you vet them.
+      </p>
+      {
+        awaitingVetting.length === 0 ? (
+          <p class="admin-empty">No one waiting.</p>
         ) : (
           <div class="user-list">
-            {pending.map((u) => (
+            {awaitingVetting.map((u) => (
               <div class="user-row">
                 <div class="user-info">
                   <span class="user-email">{u.email}</span>
-                  <span class="user-meta">Requested {formatDate(u.created_at)}</span>
+                  <span class="user-meta">Joined {formatDate(u.created_at)}</span>
                 </div>
                 <div class="user-actions">
-                  <form method="POST" action="/api/admin/approve">
+                  <form method="POST" action="/api/admin/vet">
                     <input type="hidden" name="userId" value={u.id} />
-                    <button type="submit" class="action-btn is-approve">Approve</button>
+                    <button type="submit" class="action-btn is-approve">Vet</button>
                   </form>
-                  <form method="POST" action="/api/admin/deny">
+                  <form method="POST" action="/api/admin/remove">
                     <input type="hidden" name="userId" value={u.id} />
-                    <button type="submit" class="action-btn">Deny</button>
+                    <button type="submit" class="action-btn">Remove</button>
                   </form>
                 </div>
               </div>
@@ -71,29 +167,54 @@ function formatDate(iso: string) {
     </section>
 
     <section class="admin-section">
-      <h2 class="admin-heading">Approved ({approved.length})</h2>
+      <h2 class="admin-heading">Members ({vettedMembers.length})</h2>
       {
-        approved.length === 0 ? (
-          <p class="admin-empty">No one approved yet.</p>
+        vettedMembers.length === 0 ? (
+          <p class="admin-empty">No vetted members yet.</p>
         ) : (
           <div class="user-list">
-            {approved.map((u) => (
-              <div class="user-row">
-                <div class="user-info">
-                  <span class="user-email">{u.email}</span>
-                  <span class="user-meta">Joined {formatDate(u.created_at)}</span>
+            {vettedMembers.map((u) => {
+              const usage = usageByCreator.get(u.id) ?? { total: 0, used: 0 };
+              return (
+                <div class="user-row">
+                  <div class="user-info">
+                    <span class="user-email">{u.email}</span>
+                    <span class="user-meta">
+                      Invites used {usage.used}/{usage.total} · joined {formatDate(u.created_at)}
+                    </span>
+                  </div>
+                  <div class="user-actions">
+                    <form method="POST" action="/api/admin/topup-invites">
+                      <input type="hidden" name="userId" value={u.id} />
+                      <button type="submit" class="action-btn">+2 invites</button>
+                    </form>
+                    <form method="POST" action="/api/admin/remove">
+                      <input type="hidden" name="userId" value={u.id} />
+                      <button type="submit" class="action-btn">Remove</button>
+                    </form>
+                  </div>
                 </div>
-                <div class="user-actions">
-                  <form method="POST" action="/api/admin/revoke">
-                    <input type="hidden" name="userId" value={u.id} />
-                    <button type="submit" class="action-btn">Revoke</button>
-                  </form>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )
       }
+    </section>
+
+    <section class="admin-section">
+      <h2 class="admin-heading">Invite Tree</h2>
+      <p class="admin-note">Who brought whom. Indentation = generations of word of mouth.</p>
+      <div class="tree">
+        {
+          treeRows.map((row) => (
+            <div class="tree-row" style={`padding-left: ${row.depth * 22}px`}>
+              <span class="tree-branch">{row.depth === 0 ? '●' : '└'}</span>
+              <span class="tree-email">{row.email}</span>
+              {row.childCount > 0 && <span class="tree-count">+{row.childCount}</span>}
+            </div>
+          ))
+        }
+      </div>
     </section>
 
     <section class="admin-section">
@@ -136,6 +257,21 @@ function formatDate(iso: string) {
     margin: 0 auto;
     width: 100%;
     border-bottom: 1px solid var(--border-default);
+  }
+  .back-link {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.12s;
+  }
+  .back-link:hover {
+    color: var(--fg-primary);
   }
   .page-label {
     font-family: var(--font-body);
@@ -184,9 +320,17 @@ function formatDate(iso: string) {
     font-family: var(--font-display);
     font-size: 1.5rem;
     letter-spacing: 0.02em;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border-default);
+  }
+  .admin-note {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--fg-secondary);
+    margin-bottom: 20px;
   }
   .admin-empty {
     font-family: var(--font-body);
@@ -194,6 +338,49 @@ function formatDate(iso: string) {
     font-weight: 300;
     color: var(--fg-secondary);
   }
+
+  .mint-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .mint-count {
+    width: 64px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    padding: 8px 10px;
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--fg-primary);
+    outline: none;
+  }
+  .mint-count:focus {
+    border-color: var(--fg-tertiary);
+  }
+  .seed-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .seed-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border-default);
+  }
+  .seed-code {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    letter-spacing: 0.16em;
+    color: var(--fg-primary);
+  }
+  .seed-actions {
+    display: flex;
+    gap: 8px;
+  }
+
   .user-list {
     display: flex;
     flex-direction: column;
@@ -250,6 +437,54 @@ function formatDate(iso: string) {
   .action-btn.is-approve {
     color: var(--fg-primary);
     border-color: var(--fg-primary);
+  }
+  .copy-btn {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .copy-btn:hover {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+
+  .tree {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tree-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 5px 0;
+  }
+  .tree-branch {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-tertiary);
+  }
+  .tree-email {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--fg-primary);
+  }
+  .tree-count {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--fg-tertiary);
   }
 
   .question-list {
@@ -310,3 +545,21 @@ function formatDate(iso: string) {
     border-color: var(--fg-tertiary);
   }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const value = btn.dataset.copy ?? '';
+      try {
+        await navigator.clipboard.writeText(value);
+        const original = btn.textContent;
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => {
+          btn.textContent = original;
+        }, 1400);
+      } catch {
+        window.prompt('Copy this:', value);
+      }
+    });
+  });
+</script>
