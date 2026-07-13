@@ -4,8 +4,10 @@ import SectionHeader from './SectionHeader.astro';
 
 const publications = (await getCollection('publications'))
   .sort((a, b) => {
-    // Newest first; `order` only breaks ties within the same year.
-    if (b.data.year !== a.data.year) return b.data.year - a.data.year;
+    // Newest first; undated entries sort last; `order` breaks ties within a year.
+    const ya = a.data.year ?? 0;
+    const yb = b.data.year ?? 0;
+    if (yb !== ya) return yb - ya;
     return (a.data.order ?? 0) - (b.data.order ?? 0);
   })
   .map((p) => p.data);
@@ -302,7 +304,7 @@ const typeSummary = [
 
   interface Publication {
     type: PublicationType;
-    year: number;
+    year?: number;
     title: string;
     journal: string;
     doi: string;
@@ -343,7 +345,7 @@ const typeSummary = [
 
     const year = document.createElement('div');
     year.className = 'paper-year';
-    year.textContent = String(p.year);
+    year.textContent = p.year ? String(p.year) : '';
 
     const body = document.createElement('div');
     body.className = 'paper-body';
@@ -356,11 +358,14 @@ const typeSummary = [
     title.className = 'paper-title';
     title.textContent = p.title;
 
-    const journal = document.createElement('div');
-    journal.className = 'paper-journal';
-    journal.textContent = p.journal;
+    body.append(type, title);
 
-    body.append(type, title, journal);
+    if (p.journal) {
+      const journal = document.createElement('div');
+      journal.className = 'paper-journal';
+      journal.textContent = p.journal;
+      body.append(journal);
+    }
 
     if (p.doi) {
       const doi = document.createElement('div');
