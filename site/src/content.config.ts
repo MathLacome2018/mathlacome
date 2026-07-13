@@ -4,14 +4,18 @@ import { glob } from 'astro/loaders';
 const publications = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/publications' }),
   schema: z.object({
-    type: z.enum(['book', 'article']),
+    // Any unrecognised value falls back to "article", so a new paper never
+    // breaks the build over a missing or mistyped type.
+    type: z.enum(['book', 'book-chapter', 'article']).catch('article'),
     year: z.number(),
     title: z.string(),
     journal: z.string(),
     doi: z.string().optional().default(''),
     doiUrl: z.string().default('#'),
     pdfUrl: z.string().default('#'),
-    order: z.number(),
+    // Optional manual tiebreaker. The list sorts by year (newest first);
+    // set this only when you want to pin ordering within the same year.
+    order: z.number().optional(),
   }),
 });
 
