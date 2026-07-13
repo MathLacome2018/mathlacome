@@ -325,6 +325,7 @@ const typeSummary = [
     title: string;
     authors: string;
     journal: string;
+    url: string;
     doi: string;
     doiUrl: string;
     pdfUrl: string;
@@ -340,6 +341,23 @@ const typeSummary = [
   // Every PDF box points at the shared Google Drive folder of papers.
   const PDF_FOLDER_URL =
     'https://drive.google.com/drive/folders/1tDTqZVw9n43F12ygrlICjLwgyoGNIcXT?usp=sharing';
+
+  // Resolves the DOI / View box link. Reads the `url` field first (the exact
+  // link -- a DOI for papers, an Amazon page for books), then falls back to
+  // older doiUrl/doi fields. Normalises so a bare DOI never resolves as a
+  // relative path back to this site. Returns null when there's nothing usable
+  // (the box is then hidden).
+  function doiHref(p: Publication): string | null {
+    for (const raw of [p.url, p.doiUrl, p.doi]) {
+      if (!raw) continue;
+      const s = raw.trim().replace(/^doi:\s*/i, '');
+      if (!s || s === '#') continue;
+      if (/^https?:\/\//i.test(s)) return s;
+      if (/^doi\.org\//i.test(s)) return `https://${s}`;
+      if (/^10\.\d/.test(s)) return `https://doi.org/${s}`;
+    }
+    return null;
+  }
 
   const PER_PAGE = 10;
   let currentPage = 0;
@@ -410,12 +428,16 @@ const typeSummary = [
     const actions = document.createElement('div');
     actions.className = 'paper-actions';
 
-    const doiLink = document.createElement('a');
-    doiLink.className = 'paper-link';
-    doiLink.href = p.doiUrl;
-    doiLink.target = '_blank';
-    doiLink.rel = 'noopener noreferrer';
-    doiLink.textContent = isBook ? 'View →' : 'DOI →';
+    const href = doiHref(p);
+    if (href) {
+      const doiLink = document.createElement('a');
+      doiLink.className = 'paper-link';
+      doiLink.href = href;
+      doiLink.target = '_blank';
+      doiLink.rel = 'noopener noreferrer';
+      doiLink.textContent = isBook ? 'View →' : 'DOI →';
+      actions.append(doiLink);
+    }
 
     const pdfLink = document.createElement('a');
     pdfLink.className = 'paper-link';
@@ -424,7 +446,7 @@ const typeSummary = [
     pdfLink.rel = 'noopener noreferrer';
     pdfLink.textContent = '↓ PDF';
 
-    actions.append(doiLink, pdfLink);
+    actions.append(pdfLink);
     entry.append(year, body, actions);
     return entry;
   }
