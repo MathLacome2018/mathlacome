@@ -3,13 +3,15 @@ import { glob } from 'astro/loaders';
 
 const publications = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/publications' }),
+  // Only `title` is required. Every other field is optional with a sensible
+  // fallback so that a single missing field in a hand-added paper can never
+  // break the whole build -- the entry just renders without that piece.
   schema: z.object({
-    // Any unrecognised value falls back to "article", so a new paper never
-    // breaks the build over a missing or mistyped type.
-    type: z.enum(['book', 'book-chapter', 'article']).catch('article'),
-    year: z.number(),
     title: z.string(),
-    journal: z.string(),
+    // Any unrecognised value falls back to "article".
+    type: z.enum(['book', 'book-chapter', 'article']).catch('article'),
+    year: z.number().optional(),
+    journal: z.string().optional().default(''),
     doi: z.string().optional().default(''),
     doiUrl: z.string().default('#'),
     pdfUrl: z.string().default('#'),
