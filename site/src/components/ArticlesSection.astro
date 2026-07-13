@@ -2,23 +2,38 @@
 import { getCollection } from 'astro:content';
 import SectionHeader from './SectionHeader.astro';
 
-const publications = (await getCollection('publications')).sort((a, b) => a.data.order - b.data.order).map((p) => p.data);
+const publications = (await getCollection('publications'))
+  .sort((a, b) => {
+    // Newest first; `order` only breaks ties within the same year.
+    if (b.data.year !== a.data.year) return b.data.year - a.data.year;
+    return (a.data.order ?? 0) - (b.data.order ?? 0);
+  })
+  .map((p) => p.data);
 
 const bookCount = publications.filter((p) => p.type === 'book').length;
+const chapterCount = publications.filter((p) => p.type === 'book-chapter').length;
 const articleCount = publications.filter((p) => p.type === 'article').length;
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const typeSummary = [
+  bookCount && plural(bookCount, 'Book'),
+  chapterCount && plural(chapterCount, 'Chapter'),
+  articleCount && plural(articleCount, 'Article'),
+]
+  .filter(Boolean)
+  .join('  ·  ');
 ---
 
 <section id="articles">
   <div class="inner">
     <SectionHeader num="01" title="Articles & Publications" />
     <div class="articles-meta">
-      <span class="articles-count"
-        >{publications.length} Publications &nbsp;·&nbsp; {bookCount} Book &nbsp;·&nbsp; {articleCount} Research Articles</span
-      >
+      <span class="articles-count">{plural(publications.length, 'Publication')} &nbsp;·&nbsp; {typeSummary}</span>
       <div class="filter-tabs">
         <button class="filter-tab active" data-filter="all">All</button>
-        <button class="filter-tab" data-filter="book">Book</button>
-        <button class="filter-tab" data-filter="article">Articles</button>
+        {bookCount > 0 && <button class="filter-tab" data-filter="book">Books</button>}
+        {chapterCount > 0 && <button class="filter-tab" data-filter="book-chapter">Chapters</button>}
+        {articleCount > 0 && <button class="filter-tab" data-filter="article">Articles</button>}
       </div>
     </div>
     <div class="paper-list" id="paper-list"></div>
@@ -283,16 +298,24 @@ const articleCount = publications.filter((p) => p.type === 'article').length;
 </style>
 
 <script>
+  type PublicationType = 'book' | 'book-chapter' | 'article';
+
   interface Publication {
-    type: 'book' | 'article';
+    type: PublicationType;
     year: number;
     title: string;
     journal: string;
     doi: string;
     doiUrl: string;
     pdfUrl: string;
-    order: number;
+    order?: number;
   }
+
+  const TYPE_LABEL: Record<PublicationType, string> = {
+    book: 'Book',
+    'book-chapter': 'Book Chapter',
+    article: 'Research Article',
+  };
 
   const PER_PAGE = 10;
   let currentPage = 0;
@@ -327,7 +350,7 @@ const articleCount = publications.filter((p) => p.type === 'article').length;
 
     const type = document.createElement('div');
     type.className = 'paper-type';
-    type.textContent = isBook ? 'Book' : 'Research Article';
+    type.textContent = TYPE_LABEL[p.type] ?? 'Research Article';
 
     const title = document.createElement('div');
     title.className = 'paper-title';
