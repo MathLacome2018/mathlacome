@@ -11,6 +11,9 @@ const publications = defineCollection({
     // Any unrecognised value falls back to "article".
     type: z.enum(['book', 'book-chapter', 'article']).catch('article'),
     year: z.number().optional(),
+    // Full author list, e.g. "Buchheit M., Lacome M., Simpson B.M." --
+    // "Lacome M." is rendered in bold automatically.
+    authors: z.string().optional().default(''),
     journal: z.string().optional().default(''),
     doi: z.string().optional().default(''),
     doiUrl: z.string().default('#'),
