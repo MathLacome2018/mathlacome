@@ -165,6 +165,7 @@ const typeSummary = [
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
   }
   :global(.paper-type) {
     font-family: var(--font-body);
@@ -180,9 +181,29 @@ const typeSummary = [
     letter-spacing: 0.02em;
     line-height: 1.1;
     color: var(--fg-primary);
+    overflow-wrap: anywhere;
   }
   :global(.paper-entry.is-book .paper-title) {
     font-size: 1.5rem;
+  }
+  :global(.paper-authors) {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--fg-secondary);
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  :global(.paper-authors strong) {
+    font-weight: 600;
+    color: var(--fg-primary);
+  }
+  :global(.paper-entry.is-book .paper-authors) {
+    color: rgba(0, 0, 0, 0.55);
+  }
+  :global(.paper-entry.is-book .paper-authors strong) {
+    color: #000;
   }
   :global(.paper-journal) {
     font-family: var(--font-body);
@@ -190,13 +211,7 @@ const typeSummary = [
     font-weight: 300;
     color: var(--fg-secondary);
     letter-spacing: 0.04em;
-  }
-  :global(.paper-doi) {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.25);
-    letter-spacing: 0.03em;
-    margin-top: 2px;
+    overflow-wrap: anywhere;
   }
 
   :global(.paper-actions) {
@@ -220,6 +235,8 @@ const typeSummary = [
     transition: all 0.12s;
     white-space: nowrap;
     cursor: pointer;
+    min-width: 64px;
+    text-align: center;
   }
   :global(.paper-link:hover) {
     color: #000;
@@ -306,6 +323,7 @@ const typeSummary = [
     type: PublicationType;
     year?: number;
     title: string;
+    authors: string;
     journal: string;
     doi: string;
     doiUrl: string;
@@ -318,6 +336,10 @@ const typeSummary = [
     'book-chapter': 'Book Chapter',
     article: 'Research Article',
   };
+
+  // Every PDF box points at the shared Google Drive folder of papers.
+  const PDF_FOLDER_URL =
+    'https://drive.google.com/drive/folders/1tDTqZVw9n43F12ygrlICjLwgyoGNIcXT?usp=sharing';
 
   const PER_PAGE = 10;
   let currentPage = 0;
@@ -360,18 +382,29 @@ const typeSummary = [
 
     body.append(type, title);
 
+    if (p.authors) {
+      const authors = document.createElement('div');
+      authors.className = 'paper-authors';
+      // Bold any author entry that is "Lacome M." (comma-separated list).
+      p.authors.split(',').forEach((raw, i) => {
+        const name = raw.trim();
+        if (i > 0) authors.append(document.createTextNode(', '));
+        if (/lacome/i.test(name)) {
+          const strong = document.createElement('strong');
+          strong.textContent = name;
+          authors.append(strong);
+        } else {
+          authors.append(document.createTextNode(name));
+        }
+      });
+      body.append(authors);
+    }
+
     if (p.journal) {
       const journal = document.createElement('div');
       journal.className = 'paper-journal';
       journal.textContent = p.journal;
       body.append(journal);
-    }
-
-    if (p.doi) {
-      const doi = document.createElement('div');
-      doi.className = 'paper-doi';
-      doi.textContent = p.doi;
-      body.append(doi);
     }
 
     const actions = document.createElement('div');
@@ -386,7 +419,7 @@ const typeSummary = [
 
     const pdfLink = document.createElement('a');
     pdfLink.className = 'paper-link';
-    pdfLink.href = p.pdfUrl;
+    pdfLink.href = PDF_FOLDER_URL;
     pdfLink.target = '_blank';
     pdfLink.rel = 'noopener noreferrer';
     pdfLink.textContent = '↓ PDF';
