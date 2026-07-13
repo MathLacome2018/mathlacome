@@ -15,6 +15,9 @@ const publications = defineCollection({
     // "Lacome M." is rendered in bold automatically.
     authors: z.string().optional().default(''),
     journal: z.string().optional().default(''),
+    // The link the DOI / View box points at: a paper's DOI, or an Amazon
+    // page for a book. Full URL preferred; a bare DOI also works.
+    url: z.string().optional().default(''),
     doi: z.string().optional().default(''),
     doiUrl: z.string().default('#'),
     pdfUrl: z.string().default('#'),
