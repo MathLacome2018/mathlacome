@@ -42,6 +42,7 @@ export async function mintInviteCodes(admin: SupabaseClient, opts: MintOptions):
   const inserted: Invite[] = [];
   for (let i = 0; i < opts.count; i++) {
     let placed = false;
+    let lastError: { code?: string; message?: string } | null = null;
     for (let attempt = 0; attempt < 5 && !placed; attempt++) {
       const { data, error } = await admin
         .from('invites')
@@ -56,9 +57,16 @@ export async function mintInviteCodes(admin: SupabaseClient, opts: MintOptions):
       if (!error && data) {
         inserted.push(data as Invite);
         placed = true;
-      } else if (attempt === 4) {
-        throw new Error('Could not generate a unique invite code.');
+        break;
       }
+      lastError = error;
+      // Only a duplicate-code collision (23505) is worth retrying. Anything
+      // else -- most commonly the `invites` table not existing yet -- will
+      // never succeed, so fail fast and surface the real message.
+      if (error && error.code !== '23505') break;
+    }
+    if (!placed) {
+      throw new Error(lastError?.message || 'Could not generate a unique invite code.');
     }
   }
   return inserted;
