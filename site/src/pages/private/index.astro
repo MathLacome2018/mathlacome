@@ -17,10 +17,16 @@ const admin = isAdminEmail(user?.email);
     <div class="page-label">02 / Private</div>
     <h1 class="page-title">Private<br />Space.</h1>
     <div class="page-blurb">
-      <!-- Replace these three lines with your real copy -->
-      <p class="blurb-line">This is a personal space — not a curated feed, not a publication.</p>
-      <p class="blurb-line">Three ongoing notebooks: what I read, what I test on myself, and the questions you ask me.</p>
-      <p class="blurb-line">Unfiltered, updated without schedule, written for those who asked to be here.</p>
+      <p class="blurb-line">
+        This is an invitation-only space, dedicated to you and to young practitioners who want to grow.
+      </p>
+      <p class="blurb-line">
+        If you are here, you have 2 personal invitations to share with people you trust and want to support. The
+        only rule is a dedication to supporting early-career performance staff.
+      </p>
+      <p class="blurb-line">
+        This space is unfiltered, updated once a week, and written for those who are happy to be here.
+      </p>
     </div>
     <div class="account-bar">
       <span>Signed in as {user?.email}</span>
@@ -48,24 +54,9 @@ const admin = isAdminEmail(user?.email);
       </div>
     </a>
 
-    <a href="/private/experiments" class="box">
-      <div class="box-dot-field"></div>
-      <div class="box-num">02</div>
-      <div class="box-icon">E</div>
-      <div class="box-title">Life<br />Experiments.</div>
-      <div class="box-desc">
-        Personal protocols, interventions and observations. Sleep, training, nutrition, cognition — what I try, what I
-        track, what I conclude.
-      </div>
-      <div class="box-cta">
-        <span class="box-cta-label">Enter</span>
-        <span class="box-arrow">→</span>
-      </div>
-    </a>
-
     <a href="/private/questions" class="box">
       <div class="box-dot-field"></div>
-      <div class="box-num">03</div>
+      <div class="box-num">02</div>
       <div class="box-icon">Q</div>
       <div class="box-title">Your Questions<br />→ My Answers.</div>
       <div class="box-desc">
@@ -187,7 +178,7 @@ const admin = isAdminEmail(user?.email);
 
   .boxes-wrap {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     max-width: 1100px;
     margin: 0 auto;
     width: 100%;
