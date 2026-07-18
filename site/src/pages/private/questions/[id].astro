@@ -40,10 +40,55 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-const answerParagraphs = (question.answer ?? '')
-  .split(/\n{2,}/)
-  .map((p) => p.trim())
-  .filter(Boolean);
+// Same lightweight prose parser as the "Books I Read" page: blank lines start
+// new paragraphs, "## Title" renders a bold hard-caps header, "- item" / "1. item"
+// render bullet lists, and single line breaks inside a paragraph are preserved
+// (rendered via white-space: pre-line) so the answer keeps the shape it was typed in.
+type ProseBlock =
+  | { kind: 'heading'; text: string }
+  | { kind: 'list'; items: string[] }
+  | { kind: 'para'; text: string };
+
+function parseProse(text: string | null): ProseBlock[] {
+  const lines = (text ?? '').replace(/\r\n/g, '\n').split('\n');
+  const blocks: ProseBlock[] = [];
+  let para: string[] = [];
+  let list: string[] = [];
+  const flushPara = () => {
+    if (para.length) blocks.push({ kind: 'para', text: para.join('\n') });
+    para = [];
+  };
+  const flushList = () => {
+    if (list.length) blocks.push({ kind: 'list', items: list });
+    list = [];
+  };
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      flushPara();
+      flushList();
+      continue;
+    }
+    const heading = line.match(/^#{1,6}\s+(.*)$/);
+    const bullet = line.match(/^(?:[-*•]|\d+[.)])\s+(.*)$/);
+    if (heading) {
+      flushPara();
+      flushList();
+      blocks.push({ kind: 'heading', text: heading[1] });
+    } else if (bullet) {
+      flushPara();
+      list.push(bullet[1]);
+    } else {
+      flushList();
+      para.push(line);
+    }
+  }
+  flushPara();
+  flushList();
+  return blocks;
+}
+
+const answerBlocks = parseProse(question.answer);
 ---
 
 <BaseLayout title="Your Questions → My Answers — Mathlacome">
@@ -79,7 +124,23 @@ const answerParagraphs = (question.answer ?? '')
 
   <article class="answer-body">
     <span class="answer-label">My Answer</span>
-    {answerParagraphs.map((p) => <p class="answer-text">{p}</p>)}
+    <div class="prose">
+      {
+        answerBlocks.map((blk) =>
+          blk.kind === 'heading' ? (
+            <h3 class="prose-h">{blk.text}</h3>
+          ) : blk.kind === 'list' ? (
+            <ul class="prose-ul">
+              {blk.items.map((it) => (
+                <li class="prose-li">{it}</li>
+              ))}
+            </ul>
+          ) : (
+            <p class="prose-p">{blk.text}</p>
+          ),
+        )
+      }
+    </div>
   </article>
 
   <Footer />
@@ -182,12 +243,48 @@ const answerParagraphs = (question.answer ?? '')
     padding-bottom: 14px;
     border-bottom: 1px solid var(--border-default);
   }
-  .answer-text {
+  /* Same readable treatment as the "Books I Read" page: white, weightier body
+     copy; bold hard-caps headers; normal-case bullets. Paragraphs use
+     pre-line so single line breaks in the typed answer are preserved. */
+  .prose {
+    max-width: 700px;
+  }
+  .prose-p {
     font-family: var(--font-body);
     font-size: 15px;
-    font-weight: 300;
+    font-weight: 400;
     line-height: 1.8;
-    color: var(--fg-secondary);
-    margin-bottom: 20px;
+    color: var(--fg-primary);
+    margin-bottom: 18px;
+    white-space: pre-line;
+  }
+  .prose-h {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-primary);
+    margin: 32px 0 14px;
+  }
+  .prose > .prose-h:first-child {
+    margin-top: 0;
+  }
+  .prose-ul {
+    list-style: disc;
+    padding-left: 22px;
+    margin-bottom: 18px;
+  }
+  .prose-li {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.7;
+    color: var(--fg-primary);
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+  .prose-li::marker {
+    color: var(--fg-tertiary);
   }
 </style>
