@@ -57,8 +57,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect('/private');
   }
 
-  // The admin area is restricted to the configured admin email.
-  if (pathname.startsWith('/private/admin') && !admin) {
+  // The admin area and the Life Experiments notebook are restricted to the
+  // configured admin email -- they aren't linked from the members' space.
+  if ((pathname.startsWith('/private/admin') || pathname.startsWith('/private/experiments')) && !admin) {
     return context.redirect('/private');
   }
 
