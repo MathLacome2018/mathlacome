@@ -17,6 +17,10 @@ const admin = createSupabaseAdminClient();
 const { data: usersData, error } = await admin.auth.admin.listUsers({ perPage: 500 });
 const allUsers = usersData?.users ?? [];
 
+// Surfaced from the mint/top-up API routes when a write fails (most often
+// because the invites table setup SQL hasn't been run in Supabase yet).
+const actionError = Astro.url.searchParams.get('error');
+
 const members = allUsers
   .filter((u) => !isAdminEmail(u.email))
   .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -105,6 +109,9 @@ function formatDate(iso: string) {
 
   <div class="admin-body">
     {error && <p class="admin-error">Could not load users: {error.message}</p>}
+    {actionError && <p class="admin-error">{actionError}</p>}
+
+    <a href="/private/experiments" class="admin-quicklink">→ Life Experiments (private notebook)</a>
 
     <section class="admin-section">
       <h2 class="admin-heading">Seed Invites</h2>
@@ -331,6 +338,25 @@ function formatDate(iso: string) {
     line-height: 1.6;
     color: var(--fg-secondary);
     margin-bottom: 20px;
+  }
+  .admin-quicklink {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-primary);
+    text-decoration: none;
+    border: 1px solid var(--border-default);
+    padding: 12px 18px;
+    margin-bottom: 40px;
+    transition: all 0.12s;
+  }
+  .admin-quicklink:hover {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
   }
   .admin-empty {
     font-family: var(--font-body);
