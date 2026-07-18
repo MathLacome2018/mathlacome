@@ -1,0 +1,352 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Nav from '../../../components/Nav.astro';
+import Footer from '../../../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+const entries = (await getCollection('experiments')).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+
+const experiments = entries.map((e) => ({
+  slug: e.id,
+  title: e.data.title,
+  date: e.data.date.toISOString(),
+  status: e.data.status,
+  hypothesis: e.data.hypothesis,
+  tags: e.data.tags,
+}));
+
+const allTags = [...new Set(experiments.flatMap((e) => e.tags))].sort();
+---
+
+<BaseLayout title="Life Experiments — Mathlacome">
+  <Nav active="private" />
+
+  <div class="page-header">
+    <a href="/private/admin" class="back-link">← Admin</a>
+    <div class="page-label">Admin · Life Experiments</div>
+    <h1 class="page-title">Lab<br />Notebook.</h1>
+    <p class="intro-text">
+      A running log of small, informal experiments — on myself, on habits, on whatever's worth two weeks of
+      measuring. Negative results are welcome here and posted just as readily as the ones that work; nothing on this
+      page is a polished essay, just notes as they happen.
+    </p>
+  </div>
+
+  <div class="experiments-body">
+    {
+      allTags.length > 0 && (
+        <div class="tag-filter" id="tag-filter">
+          <button class="tag-chip active" data-tag="">All</button>
+          {allTags.map((tag) => (
+            <button class="tag-chip" data-tag={tag}>
+              {tag}
+            </button>
+          ))}
+        </div>
+      )
+    }
+
+    <div class="experiment-list" id="experiment-list"></div>
+    <p class="experiments-empty" id="experiments-empty" hidden>No experiments match that tag.</p>
+  </div>
+
+  <Footer />
+</BaseLayout>
+
+<script type="application/json" id="experiments-data" set:html={JSON.stringify(experiments)} is:inline />
+
+<style>
+  .page-header {
+    padding: 96px 32px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .back-link {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.12s;
+  }
+  .back-link:hover {
+    color: var(--fg-primary);
+  }
+  .page-label {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-label::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--fg-primary);
+  }
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    margin-bottom: 28px;
+  }
+  .intro-text {
+    max-width: 640px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.75;
+    color: var(--fg-secondary);
+    margin-bottom: 40px;
+  }
+
+  .experiments-body {
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 40px 32px 96px;
+  }
+
+  .tag-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 36px;
+  }
+  .tag-chip {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    background: none;
+    border: 1px solid var(--border-default);
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .tag-chip.active,
+  .tag-chip:hover {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+
+  .experiment-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .experiments-empty {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--fg-secondary);
+    padding: 24px 0;
+  }
+
+  :global(.experiment-entry) {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 4px 24px;
+    align-items: start;
+    padding: 22px 0;
+    border-top: 1px solid var(--border-default);
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.12s;
+  }
+  :global(.experiment-entry:hover) {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  :global(.experiment-date) {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: var(--fg-secondary);
+    padding-top: 3px;
+  }
+  :global(.experiment-main) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  :global(.experiment-heading) {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  :global(.experiment-title) {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    color: var(--fg-primary);
+  }
+  :global(.experiment-hypothesis) {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--fg-secondary);
+    line-height: 1.5;
+  }
+  :global(.experiment-tags) {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+  :global(.experiment-tag) {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+  }
+  :global(.experiment-tag)::before {
+    content: '#';
+  }
+
+  :global(.status-badge) {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid var(--border-default);
+    white-space: nowrap;
+  }
+  :global(.status-badge.is-done) {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+  }
+  :global(.status-badge.is-running) {
+    color: var(--fg-primary);
+    border-color: var(--fg-primary);
+  }
+  :global(.status-badge.is-abandoned) {
+    color: var(--fg-tertiary);
+    border-color: var(--border-default);
+  }
+</style>
+
+<script>
+  interface ExperimentRow {
+    slug: string;
+    title: string;
+    date: string;
+    status: 'running' | 'done' | 'abandoned';
+    hypothesis: string;
+    tags: string[];
+  }
+
+  const dataEl = document.getElementById('experiments-data');
+  const EXPERIMENTS: ExperimentRow[] = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+
+  let activeTag = '';
+
+  const listEl = document.getElementById('experiment-list');
+  const emptyEl = document.getElementById('experiments-empty');
+
+  const STATUS_LABEL: Record<ExperimentRow['status'], string> = {
+    running: 'Running',
+    done: 'Done',
+    abandoned: 'Abandoned',
+  };
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function visibleExperiments(): ExperimentRow[] {
+    return activeTag ? EXPERIMENTS.filter((e) => e.tags.includes(activeTag)) : EXPERIMENTS;
+  }
+
+  function buildEntry(exp: ExperimentRow): HTMLElement {
+    const entry = document.createElement('a');
+    entry.className = 'experiment-entry';
+    entry.href = `/private/experiments/${exp.slug}`;
+
+    const date = document.createElement('div');
+    date.className = 'experiment-date';
+    date.textContent = formatDate(exp.date);
+
+    const main = document.createElement('div');
+    main.className = 'experiment-main';
+
+    const heading = document.createElement('div');
+    heading.className = 'experiment-heading';
+
+    const title = document.createElement('span');
+    title.className = 'experiment-title';
+    title.textContent = exp.title;
+
+    const badge = document.createElement('span');
+    badge.className = `status-badge is-${exp.status}`;
+    badge.textContent = STATUS_LABEL[exp.status];
+
+    heading.append(title, badge);
+
+    const hypothesis = document.createElement('div');
+    hypothesis.className = 'experiment-hypothesis';
+    hypothesis.textContent = exp.hypothesis;
+
+    main.append(heading, hypothesis);
+
+    if (exp.tags.length > 0) {
+      const tagsEl = document.createElement('div');
+      tagsEl.className = 'experiment-tags';
+      exp.tags.forEach((tag) => {
+        const tagEl = document.createElement('span');
+        tagEl.className = 'experiment-tag';
+        tagEl.textContent = tag;
+        tagsEl.append(tagEl);
+      });
+      main.append(tagsEl);
+    }
+
+    entry.append(date, main);
+    return entry;
+  }
+
+  function render() {
+    if (!listEl || !emptyEl) return;
+    const list = visibleExperiments();
+    listEl.replaceChildren(...list.map(buildEntry));
+    emptyEl.hidden = list.length > 0;
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.tag-chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeTag = btn.dataset.tag ?? '';
+      document.querySelectorAll('.tag-chip').forEach((t) => t.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    });
+  });
+
+  render();
+</script>
