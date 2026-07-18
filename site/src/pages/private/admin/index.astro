@@ -93,6 +93,13 @@ const { data: openQuestionsData, error: questionsError } = await admin
   .order('like_count', { ascending: false });
 const openQuestions = openQuestionsData ?? [];
 
+const { data: answeredQuestionsData } = await admin
+  .from('questions')
+  .select('id, body, answer, tags, author_email, like_count, answered_at')
+  .eq('status', 'answered')
+  .order('answered_at', { ascending: false });
+const answeredQuestions = answeredQuestionsData ?? [];
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
 }
@@ -244,7 +251,73 @@ function formatDate(iso: string) {
                   <input type="hidden" name="questionId" value={q.id} />
                   <textarea name="answer" class="answer-input" placeholder="Write your full answer" required rows="4" />
                   <input type="text" name="tags" class="tags-input" placeholder="Tags, comma separated (e.g. workflow, in-season)" />
-                  <button type="submit" class="action-btn is-approve">Publish Answer</button>
+                  <div class="form-actions">
+                    <button type="submit" class="action-btn is-approve">Publish Answer</button>
+                    <button type="submit" form={`del-${q.id}`} class="action-btn is-danger">Delete</button>
+                  </div>
+                </form>
+                <form
+                  id={`del-${q.id}`}
+                  method="POST"
+                  action="/api/admin/delete-question"
+                  data-confirm="Delete this question permanently? This can't be undone."
+                  hidden
+                >
+                  <input type="hidden" name="questionId" value={q.id} />
+                </form>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <section class="admin-section">
+      <h2 class="admin-heading">Answered ({answeredQuestions.length})</h2>
+      <p class="admin-note">
+        Edit a published answer, fix the wording of a question, or remove it entirely. Saving keeps the original
+        publish date.
+      </p>
+      {
+        answeredQuestions.length === 0 ? (
+          <p class="admin-empty">Nothing answered yet.</p>
+        ) : (
+          <div class="question-list">
+            {answeredQuestions.map((q) => (
+              <div class="question-row">
+                <div class="question-info">
+                  <span class="question-meta">
+                    {q.like_count} likes · asked by {q.author_email} · answered{' '}
+                    {q.answered_at ? formatDate(q.answered_at) : '—'}
+                  </span>
+                </div>
+                <form method="POST" action="/api/admin/answer-question" class="answer-form">
+                  <input type="hidden" name="questionId" value={q.id} />
+                  <label class="field-label">Question</label>
+                  <textarea name="body" class="answer-input" rows="2">{q.body}</textarea>
+                  <label class="field-label">Answer</label>
+                  <textarea name="answer" class="answer-input" required rows="4">{q.answer}</textarea>
+                  <label class="field-label">Tags</label>
+                  <input
+                    type="text"
+                    name="tags"
+                    class="tags-input"
+                    value={(q.tags ?? []).join(', ')}
+                    placeholder="Tags, comma separated"
+                  />
+                  <div class="form-actions">
+                    <button type="submit" class="action-btn is-approve">Save changes</button>
+                    <button type="submit" form={`del-${q.id}`} class="action-btn is-danger">Delete</button>
+                  </div>
+                </form>
+                <form
+                  id={`del-${q.id}`}
+                  method="POST"
+                  action="/api/admin/delete-question"
+                  data-confirm="Delete this question permanently? This can't be undone."
+                  hidden
+                >
+                  <input type="hidden" name="questionId" value={q.id} />
                 </form>
               </div>
             ))}
@@ -570,6 +643,30 @@ function formatDate(iso: string) {
   .tags-input:focus {
     border-color: var(--fg-tertiary);
   }
+  .field-label {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-secondary);
+    margin-top: 4px;
+  }
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .action-btn.is-danger {
+    color: var(--fg-tertiary);
+    border-color: var(--border-default);
+  }
+  .action-btn.is-danger:hover {
+    color: #fff;
+    background: #b00020;
+    border-color: #b00020;
+  }
 </style>
 
 <script>
@@ -585,6 +682,15 @@ function formatDate(iso: string) {
         }, 1400);
       } catch {
         window.prompt('Copy this:', value);
+      }
+    });
+  });
+
+  // Confirm before any destructive (delete) form submits.
+  document.querySelectorAll<HTMLFormElement>('form[data-confirm]').forEach((form) => {
+    form.addEventListener('submit', (e) => {
+      if (!window.confirm(form.dataset.confirm || 'Are you sure?')) {
+        e.preventDefault();
       }
     });
   });
